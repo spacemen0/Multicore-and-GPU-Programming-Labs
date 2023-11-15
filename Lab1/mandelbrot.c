@@ -184,61 +184,60 @@ void parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param
 			break;
 		}
 	}
-}
 
-// if (args->id != NB_THREADS - 1)
-// {
-// 	for (int i = 0; i < (NB_THREADS); i++)
-// 	{
-// 		parameters->begin_h = (args->id + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
-// 		parameters->end_h = (args->id + 1 + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
-// 		parameters->begin_w = 0;
-// 		parameters->end_w = parameters->width;
-// 		compute_chunk(parameters);
-// 	}
-// }
-// else
-// {
-// 	for (int i = 0; i < (NB_THREADS); i++)
-// 	{
-// 		parameters->begin_h = (args->id + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
-// 		parameters->end_h = (args->id + 1 + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
-// 		parameters->begin_w = 0;
-// 		parameters->end_w = parameters->width;
-// 		compute_chunk(parameters);
-// 	}
-// 	parameters->begin_h = (args->id + 1 + NB_THREADS * (NB_THREADS - 1)) * (parameters->height) / (NB_THREADS * (NB_THREADS));
-// 	parameters->end_h = parameters->height;
-// 	parameters->begin_w = 0;
-// 	parameters->end_w = parameters->width;
-// 	compute_chunk(parameters);
-// }
+	// if (args->id != NB_THREADS - 1)
+	// {
+	// 	for (int i = 0; i < (NB_THREADS); i++)
+	// 	{
+	// 		parameters->begin_h = (args->id + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+	// 		parameters->end_h = (args->id + 1 + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+	// 		parameters->begin_w = 0;
+	// 		parameters->end_w = parameters->width;
+	// 		compute_chunk(parameters);
+	// 	}
+	// }
+	// else
+	// {
+	// 	for (int i = 0; i < (NB_THREADS); i++)
+	// 	{
+	// 		parameters->begin_h = (args->id + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+	// 		parameters->end_h = (args->id + 1 + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+	// 		parameters->begin_w = 0;
+	// 		parameters->end_w = parameters->width;
+	// 		compute_chunk(parameters);
+	// 	}
+	// 	parameters->begin_h = (args->id + 1 + NB_THREADS * (NB_THREADS - 1)) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+	// 	parameters->end_h = parameters->height;
+	// 	parameters->begin_w = 0;
+	// 	parameters->end_w = parameters->width;
+	// 	compute_chunk(parameters);
+	// }
 
 #endif
 // Compiled only if LOADBALANCE = 2
 #if LOADBALANCE == 2
-// *optional* replace this code with another load-balancing solution.
-// Only thread of ID 0 compute the whole picture
-int cur = 0;
-while (1)
-{
-	pthread_mutex_lock(&myMutex);
-	if (counter >= 0)
+	// *optional* replace this code with another load-balancing solution.
+	// Only thread of ID 0 compute the whole picture
+	int cur = 0;
+	while (1)
 	{
-		cur = counter;
-		counter--;
+		pthread_mutex_lock(&myMutex);
+		if (counter >= 0)
+		{
+			cur = counter;
+			counter--;
+		}
+		pthread_mutex_unlock(&myMutex);
+		parameters->begin_h = tasks[cur].x;
+		parameters->end_h = tasks[cur].y;
+		parameters->begin_w = 0;
+		parameters->end_w = parameters->width;
+		compute_chunk(parameters);
+		if (counter < 0)
+		{
+			break;
+		}
 	}
-	pthread_mutex_unlock(&myMutex);
-	parameters->begin_h = tasks[cur].x;
-	parameters->end_h = tasks[cur].y;
-	parameters->begin_w = 0;
-	parameters->end_w = parameters->width;
-	compute_chunk(parameters);
-	if (counter < 0)
-	{
-		break;
-	}
-}
 
 #endif
 }
