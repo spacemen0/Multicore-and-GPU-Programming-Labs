@@ -29,7 +29,7 @@ struct mandelbrot_thread
 {
 	int id;
 #ifdef MEASURE
-struct mandelbrot_timing timing;
+	struct mandelbrot_timing timing;
 #endif
 };
 struct pair
@@ -39,15 +39,15 @@ struct pair
 };
 pthread_mutex_t myMutex = PTHREAD_MUTEX_INITIALIZER;
 struct pair tasks[HEIGHT];
-int counter = HEIGHT-1;
+int counter = HEIGHT - 1;
 static void
 init_task(int h)
 {
-	for(int i=0;i<HEIGHT;i++){
-		tasks[i].x=i;
-		tasks[i].y=i+1;
+	for (int i = 0; i < HEIGHT; i++)
+	{
+		tasks[i].x = i;
+		tasks[i].y = i + 1;
 	}
-
 }
 int thread_stop;
 pthread_barrier_t thread_pool_barrier;
@@ -66,7 +66,7 @@ struct mandelbrot_timing **timing;
 
 struct mandelbrot_param mandelbrot_param;
 
-static int num_colors(struct mandelbrot_param* param)
+static int num_colors(struct mandelbrot_param *param)
 {
 	return param->maxiter + 1;
 }
@@ -115,10 +115,8 @@ compute_chunk(struct mandelbrot_param *args)
 		{
 			// Convert the coordinate of the pixel to be calculated to both
 			// real and imaginary parts of the complex number to be checked
-			Cim = (float) i / args->height * (args->upper_i - args->lower_i)
-			    + args->lower_i;
-			Cre = (float) j / args->width * (args->upper_r - args->lower_r)
-			    + args->lower_r;
+			Cim = (float)i / args->height * (args->upper_i - args->lower_i) + args->lower_i;
+			Cre = (float)j / args->width * (args->upper_r - args->lower_r) + args->lower_r;
 
 			// Gets the value returned by is_in_mandelbrot() and scale it
 			// from 0 to 255, or -1 if (Cre, Cim) is in the mandelbrot set.
@@ -126,8 +124,7 @@ compute_chunk(struct mandelbrot_param *args)
 
 			// Change a negative value to 0 in val to make mandelbrot
 			// elements to appear black in the final picture.
-			pixel = val > args->maxiter ? args->mandelbrot_color : color[val
-			    % num_colors(args)];
+			pixel = val > args->maxiter ? args->mandelbrot_color : color[val % num_colors(args)];
 
 			ppm_write(args->picture, j, i, pixel);
 		}
@@ -135,8 +132,7 @@ compute_chunk(struct mandelbrot_param *args)
 }
 /***** You may modify this portion *****/
 #if NB_THREADS > 0
-void
-init_round(struct mandelbrot_thread *args)
+void init_round(struct mandelbrot_thread *args)
 {
 	// Initialize or reinitialize here variables before any thread starts or restarts computation
 	// Every thread run this function; feel free to allow only one of them to do anything
@@ -146,26 +142,27 @@ init_round(struct mandelbrot_thread *args)
  * Each thread starts individually this function, where args->id give the thread's id from 0 to NB_THREADS
  */
 
-
-void
-parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param *parameters)
+void parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param *parameters)
 {
 // Compiled only if LOADBALANCE = 0
 #if LOADBALANCE == 0
 	// Replace this code with a naive *parallel* implementation.
 	// Only thread of ID 0 compute the whole picture
-	if(args->id!=NB_THREADS-1)
-	{parameters->begin_h = (args->id)*(parameters->height)/NB_THREADS;
-	parameters->end_h = (args->id+1)*(parameters->height)/NB_THREADS;
-	parameters->begin_w = 0;
-	parameters->end_w = parameters->width;
-	compute_chunk(parameters);}
-	else{
-	parameters->begin_h = (args->id)*(parameters->height)/NB_THREADS;
-	parameters->end_h = parameters->height;
-	parameters->begin_w = 0;
-	parameters->end_w = parameters->width;
-	compute_chunk(parameters);
+	if (args->id != NB_THREADS - 1)
+	{
+		parameters->begin_h = (args->id) * (parameters->height) / NB_THREADS;
+		parameters->end_h = (args->id + 1) * (parameters->height) / NB_THREADS;
+		parameters->begin_w = 0;
+		parameters->end_w = parameters->width;
+		compute_chunk(parameters);
+	}
+	else
+	{
+		parameters->begin_h = (args->id) * (parameters->height) / NB_THREADS;
+		parameters->end_h = parameters->height;
+		parameters->begin_w = 0;
+		parameters->end_w = parameters->width;
+		compute_chunk(parameters);
 	}
 
 #endif
@@ -173,59 +170,81 @@ parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param *par
 #if LOADBALANCE == 1
 	// Replace this code with your load-balanced smarter solution.
 	// Only thread of ID 0 compute the whole picture
-	if(args->id!=NB_THREADS-1)
-	{for(int i=0;i<(NB_THREADS);i++){
-	parameters->begin_h = (args->id+NB_THREADS*i)*(parameters->height)/(NB_THREADS*(NB_THREADS));
-	parameters->end_h = (args->id+1+NB_THREADS*i)*(parameters->height)/(NB_THREADS*(NB_THREADS));
-	parameters->begin_w = 0;
-	parameters->end_w = parameters->width;
-	compute_chunk(parameters);
-	}}
-	else{
-		for(int i=0;i<(NB_THREADS);i++){
-	parameters->begin_h = (args->id+NB_THREADS*i)*(parameters->height)/(NB_THREADS*(NB_THREADS));
-	parameters->end_h = (args->id+1+NB_THREADS*i)*(parameters->height)/(NB_THREADS*(NB_THREADS));
-	parameters->begin_w = 0;
-	parameters->end_w = parameters->width;
-	compute_chunk(parameters);
+	int i = 0;
+	while (1)
+	{
+		parameters->begin_h = (args->id + NB_THREADS * i);
+		parameters->end_h = (args->id + 1 + NB_THREADS * i);
+		parameters->begin_w = 0;
+		parameters->end_w = parameters->width;
+		compute_chunk(parameters);
+		i++;
+		if ((args->id + NB_THREADS * i) >= HEIGHT)
+		{
+			break;
+		}
 	}
-	parameters->begin_h = (args->id+1+NB_THREADS*(NB_THREADS-1))*(parameters->height)/(NB_THREADS*(NB_THREADS));
-	parameters->end_h = parameters->height;
-	parameters->begin_w = 0;
-	parameters->end_w = parameters->width;
-	compute_chunk(parameters);
-	}
+}
+
+// if (args->id != NB_THREADS - 1)
+// {
+// 	for (int i = 0; i < (NB_THREADS); i++)
+// 	{
+// 		parameters->begin_h = (args->id + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+// 		parameters->end_h = (args->id + 1 + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+// 		parameters->begin_w = 0;
+// 		parameters->end_w = parameters->width;
+// 		compute_chunk(parameters);
+// 	}
+// }
+// else
+// {
+// 	for (int i = 0; i < (NB_THREADS); i++)
+// 	{
+// 		parameters->begin_h = (args->id + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+// 		parameters->end_h = (args->id + 1 + NB_THREADS * i) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+// 		parameters->begin_w = 0;
+// 		parameters->end_w = parameters->width;
+// 		compute_chunk(parameters);
+// 	}
+// 	parameters->begin_h = (args->id + 1 + NB_THREADS * (NB_THREADS - 1)) * (parameters->height) / (NB_THREADS * (NB_THREADS));
+// 	parameters->end_h = parameters->height;
+// 	parameters->begin_w = 0;
+// 	parameters->end_w = parameters->width;
+// 	compute_chunk(parameters);
+// }
 
 #endif
 // Compiled only if LOADBALANCE = 2
 #if LOADBALANCE == 2
-	// *optional* replace this code with another load-balancing solution.
-	// Only thread of ID 0 compute the whole picture
-	int cur=0;
-	while(1){
-		pthread_mutex_lock(&myMutex);
-		if(counter>=0){
-			cur=counter;
-			counter--;
-		}
+// *optional* replace this code with another load-balancing solution.
+// Only thread of ID 0 compute the whole picture
+int cur = 0;
+while (1)
+{
+	pthread_mutex_lock(&myMutex);
+	if (counter >= 0)
+	{
+		cur = counter;
+		counter--;
+	}
 	pthread_mutex_unlock(&myMutex);
 	parameters->begin_h = tasks[cur].x;
 	parameters->end_h = tasks[cur].y;
 	parameters->begin_w = 0;
 	parameters->end_w = parameters->width;
 	compute_chunk(parameters);
-	if(counter<0)
+	if (counter < 0)
 	{
 		break;
 	}
-	}
+}
 
 #endif
 }
 /***** end *****/
 #else
-void
-sequential_mandelbrot(struct mandelbrot_param *parameters)
+void sequential_mandelbrot(struct mandelbrot_param *parameters)
 {
 	// Define the region compute_chunk() has to compute
 	// Entire height: from 0 to picture's height
@@ -243,10 +262,10 @@ sequential_mandelbrot(struct mandelbrot_param *parameters)
 // Thread code, compiled only if we use threads
 #if NB_THREADS > 0
 static void *
-run_thread(void * buffer)
+run_thread(void *buffer)
 {
 	struct mandelbrot_thread *args;
-	args = (struct mandelbrot_thread*) buffer;
+	args = (struct mandelbrot_thread *)buffer;
 	struct mandelbrot_param param;
 
 	// Notify the master this thread is spawned
@@ -281,7 +300,7 @@ run_thread(void * buffer)
 
 		// Wait for the next work signal
 		pthread_barrier_wait(&thread_pool_barrier);
-	
+
 		// Fetch the latest parameters
 		param = mandelbrot_param;
 	}
@@ -293,10 +312,9 @@ run_thread(void * buffer)
 }
 #endif
 
-void
-init_ppm(struct mandelbrot_param* param)
+void init_ppm(struct mandelbrot_param *param)
 {
-	if(param->picture->data != NULL)
+	if (param->picture->data != NULL)
 	{
 		free(param->picture->data);
 		param->picture->data = NULL;
@@ -307,15 +325,14 @@ init_ppm(struct mandelbrot_param* param)
 	param->picture->width = param->width;
 }
 
-void
-update_colors(struct mandelbrot_param* param)
+void update_colors(struct mandelbrot_param *param)
 {
 	// Gradient color
 	color_t start, stop;
 	// Other control variables
 	int i;
 
-	if(color != NULL)
+	if (color != NULL)
 	{
 		free(color);
 	}
@@ -334,14 +351,13 @@ update_colors(struct mandelbrot_param* param)
 	// Initialize the color vector
 	for (i = 0; i < num_colors(param); i++)
 	{
-		color[i].green = (stop.green - start.green) * ((double) i / num_colors(param)) + start.green;
-		color[i].red = (stop.red - start.red) * ((double) i / num_colors(param)) + start.red;
-		color[i].blue = (stop.blue - start.blue) * ((double) i / num_colors(param)) + start.blue;
+		color[i].green = (stop.green - start.green) * ((double)i / num_colors(param)) + start.green;
+		color[i].red = (stop.red - start.red) * ((double)i / num_colors(param)) + start.red;
+		color[i].blue = (stop.blue - start.blue) * ((double)i / num_colors(param)) + start.blue;
 	}
 }
 
-void
-init_mandelbrot(struct mandelbrot_param *param)
+void init_mandelbrot(struct mandelbrot_param *param)
 {
 	// Initialize the picture container, but not its buffer
 	init_task(param->height);
@@ -374,7 +390,7 @@ init_mandelbrot(struct mandelbrot_param *param)
 
 #ifdef MEASURE
 	// Measuring record structures
-	timing = malloc(sizeof(struct timing*) * NB_THREADS);
+	timing = malloc(sizeof(struct timing *) * NB_THREADS);
 #endif
 
 	// Create a thread pool
@@ -399,14 +415,14 @@ init_mandelbrot(struct mandelbrot_param *param)
 #else
 #ifdef MEASURE
 	// Measuring record structures
-	timing = malloc(sizeof(struct timing*));
+	timing = malloc(sizeof(struct timing *));
 	timing[0] = &sequential;
 #endif
 #endif
 }
 
 #ifdef MEASURE
-struct mandelbrot_timing**
+struct mandelbrot_timing **
 #else
 void
 #endif
@@ -437,8 +453,7 @@ compute_mandelbrot(struct mandelbrot_param param)
 #endif
 }
 
-void
-destroy_mandelbrot(struct mandelbrot_param param)
+void destroy_mandelbrot(struct mandelbrot_param param)
 {
 #if NB_THREADS > 0
 	int i;
