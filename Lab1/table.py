@@ -6,17 +6,15 @@ from matplotlib.ticker import FormatStrFormatter
 def compile_and_run(nb_threads, load_balance, num_runs=10):
     run_times = []
 
-    # 编译命令
+
     compile_command = f"make MEASURE=1 NB_THREADS={nb_threads} LOADBALANCE={load_balance}"
     subprocess.run(compile_command, shell=True, check=True)
 
     for _ in range(num_runs):
-        # 执行命令
         run_command = f"./mandelbrot-256-500-375--2-0.6--1-1-{nb_threads}-{load_balance}"
         process = subprocess.run(run_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = process.stdout.decode('utf-8')
 
-        # 提取运行时间
         match = re.search(r'Time: (\d+\.\d+)', output)
         if match:
             run_time = float(match.group(1))
@@ -25,12 +23,11 @@ def compile_and_run(nb_threads, load_balance, num_runs=10):
             print(f"Error: Couldn't extract time information for {nb_threads} threads and {load_balance} load balance.")
             return None
 
-    # 取平均值
     average_time = sum(run_times) / num_runs
     return average_time
 
 def generate_and_save_plot(load_balance):
-    num_threads_list = [1, 2, 3,4,5,6,7, 8,16,32]  # 你可以根据需要修改线程数量
+    num_threads_list = [1, 2, 3,4,5,6,7, 8,16,32] 
     timings = []
 
     for num_threads in num_threads_list:
@@ -38,17 +35,14 @@ def generate_and_save_plot(load_balance):
         if timing is not None:
             timings.append((num_threads, timing))
 
-    # 绘制折线图
     thread_numbers, run_times = zip(*timings)
     plt.plot(thread_numbers, run_times, marker='o')
     plt.title(f'Average Runtime vs Number of Threads (Load Balance: {load_balance})')
     plt.xlabel('Number of Threads')
     plt.ylabel('Average Runtime (seconds)')
 
-    # 设置横轴刻度为整数
     plt.xticks(thread_numbers)
 
-    # 设置纵轴刻度为显示小数点后4位
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%.4f'))
 
     plt.grid(True)
