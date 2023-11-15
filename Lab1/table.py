@@ -21,6 +21,7 @@ def compile_and_run(nb_threads, load_balance, num_runs=10):
             run_times.append(run_time)
         else:
             print(f"Error: Couldn't extract time information for {nb_threads} threads and {load_balance} load balance.")
+            print(f"run command: {run_command} output: {output}")
             return None
 
     average_time = sum(run_times) / num_runs

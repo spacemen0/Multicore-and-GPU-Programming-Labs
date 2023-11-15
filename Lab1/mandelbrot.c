@@ -38,15 +38,16 @@ struct pair
 	int y;
 };
 pthread_mutex_t myMutex = PTHREAD_MUTEX_INITIALIZER;
-struct pair tasks[8*NB_THREADS];
-int counter = 8*NB_THREADS-1;
+struct pair tasks[HEIGHT];
+int counter = HEIGHT-1;
 static void
 init_task(int h)
 {
-	for(int i=0;i<8*NB_THREADS;i++){
-		tasks[i].x=(i)*h/(8*NB_THREADS);
-		tasks[i].y=(i+1)*h/(8*NB_THREADS);
+	for(int i=0;i<HEIGHT;i++){
+		tasks[i].x=i;
+		tasks[i].y=i+1;
 	}
+
 }
 int thread_stop;
 pthread_barrier_t thread_pool_barrier;
@@ -153,20 +154,43 @@ parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param *par
 #if LOADBALANCE == 0
 	// Replace this code with a naive *parallel* implementation.
 	// Only thread of ID 0 compute the whole picture
-	parameters->begin_h = (args->id)*(parameters->height)/NB_THREADS;
+	if(args->id!=NB_THREADS-1)
+	{parameters->begin_h = (args->id)*(parameters->height)/NB_THREADS;
 	parameters->end_h = (args->id+1)*(parameters->height)/NB_THREADS;
 	parameters->begin_w = 0;
 	parameters->end_w = parameters->width;
+	compute_chunk(parameters);}
+	else{
+	parameters->begin_h = (args->id)*(parameters->height)/NB_THREADS;
+	parameters->end_h = parameters->height;
+	parameters->begin_w = 0;
+	parameters->end_w = parameters->width;
 	compute_chunk(parameters);
+	}
 
 #endif
 // Compiled only if LOADBALANCE = 1
 #if LOADBALANCE == 1
 	// Replace this code with your load-balanced smarter solution.
 	// Only thread of ID 0 compute the whole picture
-	for(int i=0;i<4;i++){
-	parameters->begin_h = (args->id+NB_THREADS*i)*(parameters->height)/(NB_THREADS*4);
-	parameters->end_h = (args->id+1+NB_THREADS*i)*(parameters->height)/(NB_THREADS*4);
+	if(args->id!=NB_THREADS-1)
+	{for(int i=0;i<(NB_THREADS);i++){
+	parameters->begin_h = (args->id+NB_THREADS*i)*(parameters->height)/(NB_THREADS*(NB_THREADS));
+	parameters->end_h = (args->id+1+NB_THREADS*i)*(parameters->height)/(NB_THREADS*(NB_THREADS));
+	parameters->begin_w = 0;
+	parameters->end_w = parameters->width;
+	compute_chunk(parameters);
+	}}
+	else{
+		for(int i=0;i<(NB_THREADS);i++){
+	parameters->begin_h = (args->id+NB_THREADS*i)*(parameters->height)/(NB_THREADS*(NB_THREADS));
+	parameters->end_h = (args->id+1+NB_THREADS*i)*(parameters->height)/(NB_THREADS*(NB_THREADS));
+	parameters->begin_w = 0;
+	parameters->end_w = parameters->width;
+	compute_chunk(parameters);
+	}
+	parameters->begin_h = (args->id+1+NB_THREADS*(NB_THREADS-1))*(parameters->height)/(NB_THREADS*(NB_THREADS));
+	parameters->end_h = parameters->height;
 	parameters->begin_w = 0;
 	parameters->end_w = parameters->width;
 	compute_chunk(parameters);
@@ -177,24 +201,23 @@ parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param *par
 #if LOADBALANCE == 2
 	// *optional* replace this code with another load-balancing solution.
 	// Only thread of ID 0 compute the whole picture
-	int cur;
+	int cur=0;
 	while(1){
 		pthread_mutex_lock(&myMutex);
 		if(counter>=0){
 			cur=counter;
 			counter--;
 		}
-		pthread_mutex_unlock(&myMutex);
-			if(counter<0)
-	{
-		break;
-	}
+	pthread_mutex_unlock(&myMutex);
 	parameters->begin_h = tasks[cur].x;
 	parameters->end_h = tasks[cur].y;
 	parameters->begin_w = 0;
 	parameters->end_w = parameters->width;
 	compute_chunk(parameters);
-
+	if(counter<0)
+	{
+		break;
+	}
 	}
 
 #endif
