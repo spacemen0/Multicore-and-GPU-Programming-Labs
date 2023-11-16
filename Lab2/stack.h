@@ -7,17 +7,17 @@
 // pthread_mutex_t cccccc= PTHREAD_MUTEX_INITIALIZER;
 struct stack
 {
-  struct node *head;
+  struct Node *head;
+  pthread_mutex_t lock;
 };
-struct node
-{
-  int value;
-  struct node *next;
-};
-typedef struct stack stack_t;
 
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+typedef struct stack stack_t;
 void stack_push(stack_t *stack, int value);
-void stack_pop(stack_t *stack);
+int stack_pop(stack_t *stack);
 
 /* Use this to check if your stack is in a consistent state from time to time */
 int stack_check(stack_t *stack);

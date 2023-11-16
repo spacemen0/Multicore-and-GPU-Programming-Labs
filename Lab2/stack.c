@@ -61,11 +61,27 @@ stack_check(stack_t *stack)
 	return 1;
 }
 
-void/* Return the type you prefer */
+int/* Return the type you prefer */
 stack_pop(stack_t *stack)
 {
 #if NON_BLOCKING == 0
   // Implement a lock_based stack
+      pthread_mutex_lock(&stack->lock);
+
+    if (stack->head == NULL) {
+        pthread_mutex_unlock(&stack->lock);
+        return -1;
+    }
+
+    Node* oldHead = stack->head;
+    int data = oldHead->data;
+    stack->head = oldHead->next;
+
+    pthread_mutex_unlock(&stack->lock);
+
+    free(oldHead);
+
+    return data;
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
 #else
@@ -85,10 +101,15 @@ stack_push(stack_t *stack,int value)
 {
 #if NON_BLOCKING == 0
   // Implement a lock_based stack
-  struct node* newNode = (struct node*)malloc(sizeof(struct node));
-  newNode->value = value;
-  newNode->next = stack->head;
-  stack->head=newNode;
+Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = value;
+
+    pthread_mutex_lock(&stack->lock);
+
+    newNode->next = stack->head;
+    stack->head = newNode;
+
+    pthread_mutex_unlock(&stack->lock);
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
 #else

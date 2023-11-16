@@ -146,7 +146,8 @@ test_setup()
 
   // Reset explicitely all members to a well-known initial value
   // For instance (to be deleted as your stack design progresses):
-  stack->change_this_member = 0;
+      stack->head = NULL;
+    pthread_mutex_init(&stack->lock, NULL);
 }
 
 void
@@ -170,7 +171,10 @@ test_push_safe()
   // several threads push concurrently to it
 
   // Do some work
-  stack_push(/* add relevant arguments here */);
+  stack_push(stack,1);
+  stack_push(stack,2);
+    stack_push(stack,3);
+      stack_push(stack,4);
 
   // check if the stack is in a consistent state
   int res = assert(stack_check(stack));
@@ -178,16 +182,20 @@ test_push_safe()
   // check other properties expected after a push operation
   // (this is to be updated as your stack design progresses)
   // Now, the test succeeds
-  return res && assert(stack->change_this_member == 0);
+  return res && assert(stack->head->data==4);
 }
 
 int
 test_pop_safe()
 {
   // Same as the test above for parallel pop operation
-
+    stack_push(stack,1);
+  stack_push(stack,2);
+    stack_push(stack,3);
+      stack_push(stack,4);
+ stack_pop(stack);
   // For now, this test always fails
-  return 0;
+  return assert(stack->head->data==3);
 }
 
 // 3 Threads should be enough to raise and detect the ABA problem
