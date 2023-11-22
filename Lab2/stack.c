@@ -92,7 +92,7 @@ stack_pop(stack_t *stack)
     do{
       oldHead = stack->head;
       data= oldHead->data;
-    }while(cas(stack, oldHead, oldHead->next)!=oldHead);
+    }while(cas((size_t*)&(stack->head), (size_t)oldHead, (size_t)oldHead->next)!=(size_t)oldHead);
     free(oldHead);
 
     return data;
@@ -131,7 +131,7 @@ Node* newNode = (Node*)malloc(sizeof(Node));
     do{
       oldHead=stack->head;
       newNode->next=oldHead;
-    }while(cas(stack, oldHead, newNode)!=oldHead);
+    }while(cas((size_t*)&(stack->head), (size_t)oldHead, (size_t)newNode)!=(size_t)oldHead);
     
 #else
   /*** Optional ***/

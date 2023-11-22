@@ -104,6 +104,7 @@ stack_measure_pop(void* arg)
     for (i = 0; i < MAX_PUSH_POP / NB_THREADS; i++)
       {
         // See how fast your implementation can pop MAX_PUSH_POP elements in parallel
+        stack_pop(stack);
       }
     clock_gettime(CLOCK_MONOTONIC, &t_stop[args->id]);
 
@@ -120,6 +121,8 @@ stack_measure_push(void* arg)
   for (i = 0; i < MAX_PUSH_POP / NB_THREADS; i++)
     {
         // See how fast your implementation can push MAX_PUSH_POP elements in parallel
+        stack_push(stack,i);
+
     }
   clock_gettime(CLOCK_MONOTONIC, &t_stop[args->id]);
 
@@ -316,7 +319,8 @@ setbuf(stdout, NULL);
   pthread_attr_t attr;
   stack_measure_arg_t arg[NB_THREADS];
   pthread_attr_init(&attr);
-
+  stack = malloc(sizeof(stack_t));
+  stack->head = NULL;
   clock_gettime(CLOCK_MONOTONIC, &start);
   for (i = 0; i < NB_THREADS; i++)
     {

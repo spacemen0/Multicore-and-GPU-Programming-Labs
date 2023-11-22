@@ -1,7 +1,7 @@
 FILES=Makefile non_blocking.c non_blocking.h stack.c stack.h test.c test.h compile *.m run settings start variables plot_data.m time_difference_global.m time_difference_thread.m
 ARCHIVE=Lab2.zip
 
-NB_THREADS=3
+NB_THREADS=10
 NON_BLOCKING=0
 SUFFIX=
 MEASURE=0
