@@ -84,6 +84,18 @@ stack_pop(stack_t *stack)
     return data;
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
+	 if (stack->head == NULL) {
+        return -1;
+    }
+    Node* oldHead ;
+    int data;
+    do{
+      oldHead = stack->head;
+      data= oldHead->data;
+    }while(cas(stack, oldHead, oldHead->next)!=oldHead);
+    free(oldHead);
+
+    return data;
 #else
   /*** Optional ***/
   // Implement a software CAS-based stack
@@ -112,6 +124,15 @@ Node* newNode = (Node*)malloc(sizeof(Node));
     pthread_mutex_unlock(&stack->lock);
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
+	Node* oldHead = stack->head;
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = value;
+    
+    do{
+      oldHead=stack->head;
+      newNode->next=oldHead;
+    }while(cas(stack, oldHead, newNode)!=oldHead);
+    
 #else
   /*** Optional ***/
   // Implement a software CAS-based stack
