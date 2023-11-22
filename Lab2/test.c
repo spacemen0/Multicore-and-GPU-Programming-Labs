@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <stddef.h>
-
+#include <unistd.h>
 #include "test.h"
 #include "stack.h"
 #include "non_blocking.h"
@@ -83,6 +83,7 @@ int assert_fun(int expr, const char *str, const char *file, const char *function
 
 stack_t *stack;
 data_t data;
+NodePool nodePool;
 
 #if MEASURE != 0
 struct stack_measure_arg
@@ -121,7 +122,7 @@ stack_measure_push(void *arg)
   for (i = 0; i < MAX_PUSH_POP / NB_THREADS; i++)
   {
     // See how fast your implementation can push MAX_PUSH_POP elements in parallel
-    stack_push(stack, i);
+    stack_push(stack, i, getNodeFromPool(&nodePool));
   }
   clock_gettime(CLOCK_MONOTONIC, &t_stop[args->id]);
 
@@ -134,6 +135,7 @@ stack_measure_push(void *arg)
 void test_init()
 {
   // Initialize your test batch
+  initNodePool(&nodePool, MAX_PUSH_POP);
 }
 
 void test_setup()
@@ -168,10 +170,10 @@ int test_push_safe()
   // several threads push concurrently to it
 
   // Do some work
-  stack_push(stack, 1);
-  stack_push(stack, 2);
-  stack_push(stack, 3);
-  stack_push(stack, 4);
+  stack_push(stack, 1, getNodeFromPool(&nodePool));
+  stack_push(stack, 2, getNodeFromPool(&nodePool));
+  stack_push(stack, 3, getNodeFromPool(&nodePool));
+  stack_push(stack, 4, getNodeFromPool(&nodePool));
 
   // check if the stack is in a consistent state
   int res = assert(stack_check(stack));
@@ -185,25 +187,50 @@ int test_push_safe()
 int test_pop_safe()
 {
   // Same as the test above for parallel pop operation
-  stack_push(stack, 1);
-  stack_push(stack, 2);
-  stack_push(stack, 3);
-  stack_push(stack, 4);
-  stack_pop(stack);
+  stack_push(stack, 1, getNodeFromPool(&nodePool));
+  stack_push(stack, 2, getNodeFromPool(&nodePool));
+  stack_push(stack, 3, getNodeFromPool(&nodePool));
+  stack_push(stack, 4, getNodeFromPool(&nodePool));
+  stack_pop_return(stack, nodePool);
   // For now, this test always fails
   return assert(stack->head->data == 3);
 }
 
 // 3 Threads should be enough to raise and detect the ABA problem
 #define ABA_NB_THREADS 3
-
+#if NON_BLOCKING == 1 || NON_BLOCKING == 2
+void aba_thread0()
+{
+  Node *oldHead;
+  Node *newNode = (Node *)malloc(sizeof(Node));
+  newNode->data = 1;
+  sleep(1);
+  do
+  {
+    oldHead = stack->head;
+    newNode->next = oldHead;
+    sleep(1);
+  } while (cas((size_t *)&(stack->head), (size_t)oldHead, (size_t)newNode) != (size_t)oldHead);
+}
+void aba_thread1()
+{
+  stack_pop_return(stack, nodePool);
+  stack_pop_return(stack, nodePool);
+  stack_push(stack, 3, getNodeFromPool(&nodePool));
+}
+#endif
 int test_aba()
 {
 #if NON_BLOCKING == 1 || NON_BLOCKING == 2
-  int success, aba_detected = 0;
-  // Write here a test for the ABA problem
-  success = aba_detected;
-  return success;
+  stack_push(stack, 1, getNodeFromPool(&nodePool));
+  stack_push(stack, 2, getNodeFromPool(&nodePool));
+  stack_push(stack, 3, getNodeFromPool(&nodePool));
+  pthread_t thread0, thread1;
+  pthread_create(&thread0, NULL, aba_thread0, NULL);
+  pthread_create(&thread1, NULL, aba_thread1, NULL);
+  pthread_join(thread0, NULL);
+  pthread_join(thread1, NULL);
+  return assert(stack->head->data == 1);
 #else
   // No ABA is possible with lock-based synchronization. Let the test succeed only
   return 1;
@@ -305,6 +332,7 @@ int main(int argc, char **argv)
 
   test_finalize();
 #else
+  test_init();
   int i;
   pthread_t thread[NB_THREADS];
   pthread_attr_t attr;
