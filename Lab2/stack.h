@@ -11,9 +11,10 @@ struct stack
   pthread_mutex_t lock;
 };
 
-typedef struct Node {
-    int data;
-    struct Node* next;
+typedef struct Node
+{
+  int data;
+  struct Node *next;
 } Node;
 typedef struct stack stack_t;
 void stack_push(stack_t *stack, int value);

@@ -5,20 +5,20 @@
  *  Copyright 2011 Nicolas Melot
  *
  * This file is part of TDDD56.
- * 
+ *
  *     TDDD56 is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
- * 
+ *
  *     TDDD56 is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
- * 
+ *
  *     You should have received a copy of the GNU General Public License
  *     along with TDDD56. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 #ifndef DEBUG
@@ -45,57 +45,59 @@
 #endif
 #endif
 
-int
-stack_check(stack_t *stack)
+int stack_check(stack_t *stack)
 {
 // Do not perform any sanity check if performance is bein measured
 #if MEASURE == 0
-	// Use assert() to check if your stack is in a state that makes sens
-	// This test should always pass 
-	assert(1 == 1);
+  // Use assert() to check if your stack is in a state that makes sens
+  // This test should always pass
+  assert(1 == 1);
 
-	// This test fails if the task is not allocated or if the allocation failed
-	assert(stack != NULL);
+  // This test fails if the task is not allocated or if the allocation failed
+  assert(stack != NULL);
 #endif
-	// The stack is always fine
-	return 1;
+  // The stack is always fine
+  return 1;
 }
 
-int/* Return the type you prefer */
+int /* Return the type you prefer */
 stack_pop(stack_t *stack)
 {
 #if NON_BLOCKING == 0
   // Implement a lock_based stack
-      pthread_mutex_lock(&stack->lock);
+  pthread_mutex_lock(&stack->lock);
 
-    if (stack->head == NULL) {
-        pthread_mutex_unlock(&stack->lock);
-        return -1;
-    }
-
-    Node* oldHead = stack->head;
-    int data = oldHead->data;
-    stack->head = oldHead->next;
-
+  if (stack->head == NULL)
+  {
     pthread_mutex_unlock(&stack->lock);
+    return -1;
+  }
 
-    free(oldHead);
+  Node *oldHead = stack->head;
+  int data = oldHead->data;
+  stack->head = oldHead->next;
 
-    return data;
+  pthread_mutex_unlock(&stack->lock);
+
+  free(oldHead);
+
+  return data;
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
-	 if (stack->head == NULL) {
-        return -1;
-    }
-    Node* oldHead ;
-    int data;
-    do{
-      oldHead = stack->head;
-      data= oldHead->data;
-    }while(cas((size_t*)&(stack->head), (size_t)oldHead, (size_t)oldHead->next)!=(size_t)oldHead);
-    free(oldHead);
+  if (stack->head == NULL)
+  {
+    return -1;
+  }
+  Node *oldHead;
+  int data;
+  do
+  {
+    oldHead = stack->head;
+    data = oldHead->data;
+  } while (cas((size_t *)&(stack->head), (size_t)oldHead, (size_t)oldHead->next) != (size_t)oldHead);
+  free(oldHead);
 
-    return data;
+  return data;
 #else
   /*** Optional ***/
   // Implement a software CAS-based stack
@@ -104,39 +106,37 @@ stack_pop(stack_t *stack)
   // Debug practice: you can check if this operation results in a stack in a consistent check
   // It doesn't harm performance as sanity check are disabled at measurement time
   // This is to be updated as your implementation progresses
-  stack_check((stack_t*)1);
-
+  stack_check((stack_t *)1);
 }
 
 void /* Return the type you prefer */
-stack_push(stack_t *stack,int value)
+stack_push(stack_t *stack, int value)
 {
 #if NON_BLOCKING == 0
   // Implement a lock_based stack
-Node* newNode = (Node*)malloc(sizeof(Node));
-    newNode->data = value;
+  Node *newNode = (Node *)malloc(sizeof(Node));
+  newNode->data = value;
 
-    pthread_mutex_lock(&stack->lock);
+  pthread_mutex_lock(&stack->lock);
 
-    newNode->next = stack->head;
-    stack->head = newNode;
+  newNode->next = stack->head;
+  stack->head = newNode;
 
-    pthread_mutex_unlock(&stack->lock);
+  pthread_mutex_unlock(&stack->lock);
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
-	Node* oldHead = stack->head;
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    newNode->data = value;
-    
-    do{
-      oldHead=stack->head;
-      newNode->next=oldHead;
-    }while(cas((size_t*)&(stack->head), (size_t)oldHead, (size_t)newNode)!=(size_t)oldHead);
-    
+  Node *oldHead = stack->head;
+  Node *newNode = (Node *)malloc(sizeof(Node));
+  newNode->data = value;
+
+  do
+  {
+    oldHead = stack->head;
+    newNode->next = oldHead;
+  } while (cas((size_t *)&(stack->head), (size_t)oldHead, (size_t)newNode) != (size_t)oldHead);
+
 #else
   /*** Optional ***/
   // Implement a software CAS-based stack
 #endif
-
 }
-
