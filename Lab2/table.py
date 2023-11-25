@@ -3,14 +3,15 @@ import re
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 
-def compile_and_run(nb_threads, non_blocking, measure,num_runs=10):
-    run_times = []
-
+def compile_and_run(nb_threads, non_blocking, measure,num_runs=20):
+    
+    max_times = []
 
     compile_command = f"make NON_BLOCKING={non_blocking} MEASURE={measure} NB_THREADS={nb_threads}"
     subprocess.run(compile_command, shell=True, check=True)
 
     for _ in range(num_runs):
+        run_times = []
         run_command = f"./stack"
         process = subprocess.run(run_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = process.stdout.decode('utf-8')
@@ -19,6 +20,7 @@ def compile_and_run(nb_threads, non_blocking, measure,num_runs=10):
             for match in matches:
                 run_time = float(re.search(r'\d+\.\d+', match.group()).group())
                 run_times.append(run_time)
+            max_times.append(max(run_times))
         else:
   
             print(f"Error: Couldn't extract time information for {nb_threads} threads and {non_blocking} non_blocking.")
@@ -26,11 +28,11 @@ def compile_and_run(nb_threads, non_blocking, measure,num_runs=10):
             return None
 
 
-    max_time = max(run_times)
+    max_time = sum(max_times)/num_runs
     return max_time
 
 def generate_and_save_plot(non_blocking, measure):
-    num_threads_list = [4,8,16,32,64,128,256,512,1024] 
+    num_threads_list = [4,8,16,32,64] 
     timings = []
 
     for num_threads in num_threads_list:
@@ -42,7 +44,7 @@ def generate_and_save_plot(non_blocking, measure):
     plt.plot(thread_numbers, run_times, marker='o')
     plt.title(f'Maximum Runtime vs Number of Threads (non_blocking: {non_blocking})')
     plt.xlabel('Number of Threads')
-    plt.ylabel('Average Runtime (seconds)')
+    plt.ylabel('Maximum Runtime (seconds)')
 
     plt.xticks(thread_numbers)
 
