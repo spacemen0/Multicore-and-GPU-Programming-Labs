@@ -135,12 +135,13 @@ stack_measure_push(void *arg)
 void test_init()
 {
   // Initialize your test batch
-    stack = malloc(sizeof(stack_t));
-    pool = malloc(sizeof(stack_t));
-    int size= MAX_PUSH_POP;
-    while(size--){
-      stack_push(pool,(Node *)malloc(sizeof(Node)));
-    }
+  stack = malloc(sizeof(stack_t));
+  pool = malloc(sizeof(stack_t));
+  int size = MAX_PUSH_POP;
+  while (size--)
+  {
+    stack_push(pool, (Node *)malloc(sizeof(Node)));
+  }
   // Reset explicitely all members to a well-known initial value
   // For instance (to be deleted as your stack design progresses):
   stack->head = NULL;
@@ -179,10 +180,10 @@ int test_push_safe()
   // several threads push concurrently to it
 
   // Do some work
-  stack_push(stack,  stack_pop(pool));
-  stack_push(stack,  stack_pop(pool));
-  stack_push(stack,  stack_pop(pool));
-  stack_push(stack,  stack_pop(pool));
+  stack_push(stack, stack_pop(pool));
+  stack_push(stack, stack_pop(pool));
+  stack_push(stack, stack_pop(pool));
+  stack_push(stack, stack_pop(pool));
 
   // check if the stack is in a consistent state
   int res = assert(stack_check(stack));
@@ -190,7 +191,7 @@ int test_push_safe()
   // check other properties expected after a push operation
   // (this is to be updated as your stack design progresses)
   // Now, the test succeeds
-  return res ;
+  return res;
 }
 
 int test_pop_safe()
@@ -352,10 +353,10 @@ int main(int argc, char **argv)
   {
     arg[i].id = i;
 #if MEASURE == 1
-  // int size= MAX_PUSH_POP;
-  //   while(size--){
-  //     stack_push(stack,stack_pop(pool));
-  //   }
+    // int size= MAX_PUSH_POP;
+    //   while(size--){
+    //     stack_push(stack,stack_pop(pool));
+    //   }
     pthread_create(&thread[i], &attr, stack_measure_pop, (void *)&arg[i]);
 #else
     pthread_create(&thread[i], &attr, stack_measure_push, (void *)&arg[i]);

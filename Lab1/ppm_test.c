@@ -5,21 +5,20 @@
 #define WIDTH 5
 #define HEIGHT 5
 
-int
-main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
-	struct ppm * picture;
+	struct ppm *picture;
 	color_t pixel;
 	int i, j;
 
 	picture = ppm_init(WIDTH, HEIGHT);
 
-	for(i = 0; i < WIDTH; i++)
+	for (i = 0; i < WIDTH; i++)
 	{
-		for(j = 0; j < HEIGHT; j++)
+		for (j = 0; j < HEIGHT; j++)
 		{
 			pixel.red = (float)i * j / (WIDTH * HEIGHT) * 255;
-			//i == 2 && j == 2 ? 255 : 0;
+			// i == 2 && j == 2 ? 255 : 0;
 			pixel.green = 0;
 			pixel.blue = pixel.green;
 
@@ -31,4 +30,3 @@ main(int argc, char ** argv)
 
 	return 0;
 }
-

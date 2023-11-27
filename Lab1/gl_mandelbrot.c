@@ -5,20 +5,20 @@
  *  Copyright 2012 Nicolas Melot
  *
  * This file is part of TDDD56.
- * 
+ *
  *     TDDD56 is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
- * 
+ *
  *     TDDD56 is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
- * 
+ *
  *     You should have received a copy of the GNU General Public License
  *     along with TDDD56. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 #if GLUT == 1
@@ -63,7 +63,7 @@ struct position
 };
 typedef struct position position_t;
 
-struct ppm* ppm;
+struct ppm *ppm;
 struct mandelbrot_param draw_param;
 
 int mouse_button_0, mouse_button_1, bounce, print_help;
@@ -75,16 +75,15 @@ char perf_caption[256], window_caption[256];
 coord_t scale_ori;
 
 position_t movement[MOV_MAX + 1], destination[] =
-	{
-		{ -0.77471, -0.77467, -0.12424, -0.12421 }, // Spiral
-		    { -0.66048, -0.66044, -0.44982, -0.44985 }, // Star
-		    { -1.26273, -1.26269, -0.40842, -0.40839 }, // Mini-mandelbrot
-		    { -0.81847, -0.81826, -0.18433, -0.18417 }, // Black hole
-	  };
+									  {
+										  {-0.77471, -0.77467, -0.12424, -0.12421}, // Spiral
+										  {-0.66048, -0.66044, -0.44982, -0.44985}, // Star
+										  {-1.26273, -1.26269, -0.40842, -0.40839}, // Mini-mandelbrot
+										  {-0.81847, -0.81826, -0.18433, -0.18417}, // Black hole
+};
 int read = 0, write = 0, last_op = 0;
 
-void
-gl_mandelbrot_init(int argc, char** argv)
+void gl_mandelbrot_init(int argc, char **argv)
 {
 	glutInit(&argc, argv);
 }
@@ -94,10 +93,8 @@ to_set(coord_t coord)
 {
 	coord_t set;
 
-	set.x = coord.x * (draw_param.upper_r - draw_param.lower_r)
-	    / draw_param.width;
-	set.y = coord.y * (draw_param.upper_i - draw_param.lower_i)
-	    / draw_param.height;
+	set.x = coord.x * (draw_param.upper_r - draw_param.lower_r) / draw_param.width;
+	set.y = coord.y * (draw_param.upper_i - draw_param.lower_i) / draw_param.height;
 
 	return set;
 }
@@ -109,18 +106,14 @@ update_position(position_t position)
 	double ratio, extra_r;
 
 	// Get the desired reduction ratio
-	ratio = (draw_param.upper_r - draw_param.lower_r) / (draw_param.upper_i
-	    - draw_param.lower_i);
+	ratio = (draw_param.upper_r - draw_param.lower_r) / (draw_param.upper_i - draw_param.lower_i);
 
 	// Reduce current display by x by the previously computed ratio, and compare it to the new position
-	extra_r = ratio * (position.max_i - position.min_i) - (position.max_r
-	    - position.min_r);
+	extra_r = ratio * (position.max_i - position.min_i) - (position.max_r - position.min_r);
 	position.min_r -= extra_r / 2;
 	position.max_r += extra_r / 2;
 
-	if (draw_param.lower_r == position.min_r && draw_param.upper_r
-	    == position.max_r && draw_param.lower_i == position.min_i
-	    && draw_param.upper_i == position.max_i)
+	if (draw_param.lower_r == position.min_r && draw_param.upper_r == position.max_r && draw_param.lower_i == position.min_i && draw_param.upper_i == position.max_i)
 		return 0;
 	else
 	{
@@ -212,7 +205,7 @@ play_movement(int value)
 {
 	double offset_x, offset_y, offset_z;
 	position_t step, dest;
-	//step = build_position(offsetX, offsetY, scale);
+	// step = build_position(offsetX, offsetY, scale);
 
 	if (pop(&step))
 	{
@@ -221,7 +214,7 @@ play_movement(int value)
 			// Need to refresh display
 			glutPostRedisplay();
 
-		//printf_position(build_position(offsetX, offsetY, scale));
+		// printf_position(build_position(offsetX, offsetY, scale));
 
 		// Restart
 		if (bounce)
@@ -235,7 +228,7 @@ play_movement(int value)
 	{
 		// No more position, add a new batch;
 		double new_x, new_y, new_scale, bell_inc, dist_2d, dist_v, dist_3d_sq,
-		    dist_3d, new_z, diam;
+			dist_3d, new_z, diam;
 		int i;
 
 		// Pick a random destination among predefined ones
@@ -265,22 +258,18 @@ play_movement(int value)
 		for (i = 0; i < MOV_MAX; i++)
 		{
 			// Progress in distance: faster and faster then less and less fast (bell curve)
-			bell_inc += bell((double) i / MOV_MAX) / bell_surface;
+			bell_inc += bell((double)i / MOV_MAX) / bell_surface;
 			if (new_scale > offset_z)
 			{
-				new_z = sin(bell_inc * dist_2d / diam * M_PI);// * dist_2d;
+				new_z = sin(bell_inc * dist_2d / diam * M_PI); // * dist_2d;
 			}
 			else
 			{
-				//printf("%f\n", (bell_inc * dist_2d + (diam - dist_2d)) / diam);
-				new_z = sin((bell_inc * dist_2d + (diam - dist_2d)) / diam * M_PI);// * dist_2d;
+				// printf("%f\n", (bell_inc * dist_2d + (diam - dist_2d)) / diam);
+				new_z = sin((bell_inc * dist_2d + (diam - dist_2d)) / diam * M_PI); // * dist_2d;
 			}
 
-			step = build_position(offset_x + ((new_x - offset_x) * bell_inc) - new_z
-			    * scale_ori.x / 2, offset_x + ((new_x - offset_x) * bell_inc) + new_z
-			    * scale_ori.x / 2, offset_y + ((new_y - offset_y) * bell_inc) - new_z
-			    * scale_ori.y / 2, offset_y + ((new_y - offset_y) * bell_inc) + new_z
-			    * scale_ori.y / 2);
+			step = build_position(offset_x + ((new_x - offset_x) * bell_inc) - new_z * scale_ori.x / 2, offset_x + ((new_x - offset_x) * bell_inc) + new_z * scale_ori.x / 2, offset_y + ((new_y - offset_y) * bell_inc) - new_z * scale_ori.y / 2, offset_y + ((new_y - offset_y) * bell_inc) + new_z * scale_ori.y / 2);
 
 			if (!push(step))
 			{
@@ -304,7 +293,7 @@ print_str(void *font, const char *string)
 {
 	int len, i;
 
-	len = (int) strlen(string);
+	len = (int)strlen(string);
 	for (i = 0; i < len; i++)
 		glutBitmapCharacter(font, string[i]);
 }
@@ -322,7 +311,7 @@ static void
 draw()
 {
 	// Exits if window or scale parameters are incorrect
-	if(isnan(draw_param.lower_r) || isnan(draw_param.upper_r) || isnan(draw_param.lower_i) || isnan(draw_param.upper_i))
+	if (isnan(draw_param.lower_r) || isnan(draw_param.upper_r) || isnan(draw_param.lower_i) || isnan(draw_param.upper_i))
 	{
 		fprintf(stderr, "Incorrect window parameters\n");
 		exit(-1);
@@ -341,16 +330,15 @@ draw()
 	glColor3f(1.f, 1.f, 1.f);
 	glRasterPos2i(4, 10);
 	sprintf(perf_caption,
-	    "Rendering time: %.3f secs (sample/sec: %.1fK; max iterations: %d)",
-	    elapsedTime, sampleSec / 1000.f, draw_param.maxiter);
+			"Rendering time: %.3f secs (sample/sec: %.1fK; max iterations: %d)",
+			elapsedTime, sampleSec / 1000.f, draw_param.maxiter);
 	print_str(GLUT_BITMAP_HELVETICA_18, perf_caption);
 
 	glRasterPos2i(4, draw_param.height - 20);
 	sprintf(window_caption,
-	    "Cre in [%.5f; %.5f]; Cim in [%.5f; %.5f] (scale: %f), %s",
-	    draw_param.lower_r, draw_param.upper_r, draw_param.lower_i,
-	    draw_param.upper_i, (draw_param.upper_r - draw_param.lower_r)
-	        / scale_ori.x, bounce ? "bouncing" : "static");
+			"Cre in [%.5f; %.5f]; Cim in [%.5f; %.5f] (scale: %f), %s",
+			draw_param.lower_r, draw_param.upper_r, draw_param.lower_i,
+			draw_param.upper_i, (draw_param.upper_r - draw_param.lower_r) / scale_ori.x, bounce ? "bouncing" : "static");
 	print_str(GLUT_BITMAP_HELVETICA_18, window_caption);
 
 	if (print_help)
@@ -374,7 +362,7 @@ draw()
 		print_str(GLUT_BITMAP_HELVETICA_18, "Left click + drag - move picture");
 		glRasterPos2i(60, 270);
 		print_str(GLUT_BITMAP_HELVETICA_18,
-		    "Right click + drag up/down - unzoom/zoom");
+				  "Right click + drag up/down - unzoom/zoom");
 		glRasterPos2i(60, 240);
 		print_str(GLUT_BITMAP_HELVETICA_18, "+ - Increase max. iterations by 32");
 		glRasterPos2i(60, 210);
@@ -395,10 +383,8 @@ reshape_window(int width, int height)
 {
 	double extra_i, extra_r;
 
-	extra_i = height * (double) (draw_param.upper_i - draw_param.lower_i)
-	    / draw_param.height + draw_param.lower_i - draw_param.upper_i;
-	extra_r = width * (double) (draw_param.upper_r - draw_param.lower_r)
-	    / draw_param.width + draw_param.lower_r - draw_param.upper_r;
+	extra_i = height * (double)(draw_param.upper_i - draw_param.lower_i) / draw_param.height + draw_param.lower_i - draw_param.upper_i;
+	extra_r = width * (double)(draw_param.upper_r - draw_param.lower_r) / draw_param.width + draw_param.lower_r - draw_param.upper_r;
 
 	draw_param.upper_i += extra_i / 2;
 	draw_param.lower_i -= extra_i / 2;
@@ -480,20 +466,15 @@ mouse_motion(int x, int y)
 		{
 			dist_win.y = y - mouse_grab.y;
 
-			//printf("dis_2d: %f\n", dist_2d_set);
+			// printf("dis_2d: %f\n", dist_2d_set);
 
 			scale = 1.0f - (2.f * dist_win.y / draw_param.height);
 
 			// Do not zoom more than that
-			medium_r = (draw_param.upper_r - draw_param.lower_r) / 2
-			    + draw_param.lower_r;
-			medium_i = (draw_param.upper_i - draw_param.lower_i) / 2
-			    + draw_param.lower_i;
+			medium_r = (draw_param.upper_r - draw_param.lower_r) / 2 + draw_param.lower_r;
+			medium_i = (draw_param.upper_i - draw_param.lower_i) / 2 + draw_param.lower_i;
 
-			if (!((((draw_param.upper_r - medium_r) <= 0.00002 && (draw_param.upper_i
-			    - medium_i) <= 0.00002) && scale < 1) || (((draw_param.upper_r
-			    - medium_r) >= 2 && (draw_param.upper_i - medium_i) >= 1.5) && scale
-			    > 1)))
+			if (!((((draw_param.upper_r - medium_r) <= 0.00002 && (draw_param.upper_i - medium_i) <= 0.00002) && scale < 1) || (((draw_param.upper_r - medium_r) >= 2 && (draw_param.upper_i - medium_i) >= 1.5) && scale > 1)))
 			{
 
 				draw_param.upper_r = medium_r + (draw_param.upper_r - medium_r) * scale;
@@ -566,8 +547,7 @@ keyboard_key(unsigned char key, int x, int y)
 	}
 }
 
-void
-gl_mandelbrot_start(struct mandelbrot_param* parameters)
+void gl_mandelbrot_start(struct mandelbrot_param *parameters)
 {
 	int i;
 
@@ -586,7 +566,7 @@ gl_mandelbrot_start(struct mandelbrot_param* parameters)
 	bell_surface = 0;
 	for (i = 0; i < MOV_MAX + 1; i++)
 	{
-		bell_surface += bell((double) i / MOV_MAX);
+		bell_surface += bell((double)i / MOV_MAX);
 	}
 
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);

@@ -16,10 +16,9 @@ typedef struct Node
   struct Node *next;
 } Node;
 
-
 void /* Return the type you prefer */
 stack_push(stack_t *stack, Node *newNode);
-Node* stack_pop(stack_t *stack);
+Node *stack_pop(stack_t *stack);
 // int stack_pop_return(stack_t *stack, NodePool nodePool);
 /* Use this to check if your stack is in a consistent state from time to time */
 int stack_check(stack_t *stack);

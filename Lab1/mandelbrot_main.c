@@ -5,20 +5,20 @@
  *  Copyright 2011 Nicolas Melot
  *
  * This file is part of TDDD56.
- * 
+ *
  *     TDDD56 is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
- * 
+ *
  *     TDDD56 is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
- * 
+ *
  *     You should have received a copy of the GNU General Public License
  *     along with TDDD56. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 // Defined when calling the compiler
@@ -50,19 +50,20 @@
 
 double timediff(struct timespec *begin, struct timespec *end)
 {
-	double sec = 0.0, nsec = 0.0;
-   if ((end->tv_nsec - begin->tv_nsec) < 0)
-   {
-      sec  = (double)(end->tv_sec  - begin->tv_sec  - 1);
-      nsec = (double)(end->tv_nsec - begin->tv_nsec + 1000000000);
-   } else
-   {
-      sec  = (double)(end->tv_sec  - begin->tv_sec );
-      nsec = (double)(end->tv_nsec - begin->tv_nsec);
-   }
-   return sec + nsec / 1E9;
+  double sec = 0.0, nsec = 0.0;
+  if ((end->tv_nsec - begin->tv_nsec) < 0)
+  {
+    sec = (double)(end->tv_sec - begin->tv_sec - 1);
+    nsec = (double)(end->tv_nsec - begin->tv_nsec + 1000000000);
+  }
+  else
+  {
+    sec = (double)(end->tv_sec - begin->tv_sec);
+    nsec = (double)(end->tv_nsec - begin->tv_nsec);
+  }
+  return sec + nsec / 1E9;
 }
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
   struct mandelbrot_param param;
   param.height = HEIGHT;
@@ -95,7 +96,7 @@ int main(int argc, char ** argv)
 #endif
 
 #ifdef MEASURE
-printf("Time: %f\n", timediff(&global.start, &global.stop));
+  printf("Time: %f\n", timediff(&global.start, &global.stop));
 #endif
 
   // Final: deallocate structures

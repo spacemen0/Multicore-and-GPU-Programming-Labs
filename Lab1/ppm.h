@@ -17,11 +17,11 @@ struct ppm
 {
 	int height;
 	int width;
-	color_t * data;
+	color_t *data;
 };
 
 void ppm_save(struct ppm *, char *);
-struct ppm * ppm_alloc(int, int);
+struct ppm *ppm_alloc(int, int);
 void ppm_free(struct ppm *);
 void ppm_write(struct ppm *, int x, int y, color_t);
 color_t ppm_read(struct ppm *, int x, int y);

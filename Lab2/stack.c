@@ -60,7 +60,7 @@ int stack_check(stack_t *stack)
   return 1;
 }
 
-Node* /* Return the type you prefer */
+Node * /* Return the type you prefer */
 stack_pop(stack_t *stack)
 {
 #if NON_BLOCKING == 0
