@@ -48,8 +48,8 @@ int main(int argc, const char* argv[])
 	
 	
 	/* Print vector for debugging */
-//	std::cout << "Input:  " << input << "\n";
-//	std::cout << "Result: " << res << "\n";
+	std::cout << "Input:  " << input << "\n";
+	std::cout << "Result: " << res << "\n";
 	
 	
 	return 0;
