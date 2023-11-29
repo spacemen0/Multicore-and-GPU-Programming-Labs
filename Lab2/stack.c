@@ -70,14 +70,12 @@ stack_pop(stack_t *stack)
   if (stack->head == NULL)
   {
     pthread_mutex_unlock(&stack->lock);
-    return -1;
+    return NULL;
   }
 
   Node *oldHead = stack->head;
   stack->head = oldHead->next;
-
   pthread_mutex_unlock(&stack->lock);
-
   return oldHead;
 
 #elif NON_BLOCKING == 1
@@ -157,6 +155,10 @@ stack_push(stack_t *stack, Node *newNode)
 {
 #if NON_BLOCKING == 0
   // Implement a lock_based stack
+  if (newNode == NULL)
+  {
+    return;
+  }
   pthread_mutex_lock(&stack->lock);
   newNode->next = stack->head;
   stack->head = newNode;
@@ -164,6 +166,10 @@ stack_push(stack_t *stack, Node *newNode)
   pthread_mutex_unlock(&stack->lock);
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
+  if (newNode == NULL)
+  {
+    return;
+  }
   Node *oldHead;
 
   do

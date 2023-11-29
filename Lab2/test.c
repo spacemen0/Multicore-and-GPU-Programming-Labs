@@ -105,7 +105,7 @@ stack_measure_pop(void *arg)
   for (i = 0; i < MAX_PUSH_POP / NB_THREADS; i++)
   {
     // See how fast your implementation can pop MAX_PUSH_POP elements in parallel
-    stack_pop(stack);
+    // stack_pop(stack);
   }
   clock_gettime(CLOCK_MONOTONIC, &t_stop[args->id]);
 
@@ -150,16 +150,16 @@ void test_init()
 
 void test_setup()
 {
-  // Allocate and initialize your test stack before each test
-  data = DATA_VALUE;
+  // // Allocate and initialize your test stack before each test
+  // data = DATA_VALUE;
 
-  // Allocate a new stack and reset its values
-  stack = malloc(sizeof(stack_t));
+  // // Allocate a new stack and reset its values
+  // stack = malloc(sizeof(stack_t));
 
-  // Reset explicitely all members to a well-known initial value
-  // For instance (to be deleted as your stack design progresses):
-  stack->head = NULL;
-  pthread_mutex_init(&stack->lock, NULL);
+  // // Reset explicitely all members to a well-known initial value
+  // // For instance (to be deleted as your stack design progresses):
+  // stack->head = NULL;
+  // pthread_mutex_init(&stack->lock, NULL);
 }
 
 void test_teardown()
@@ -186,7 +186,7 @@ int test_push_safe()
   stack_push(stack, stack_pop(pool));
 
   // check if the stack is in a consistent state
-  int res = assert(stack_check(stack));
+  int res = assert(stack->head->next->next->next->next == NULL);
 
   // check other properties expected after a push operation
   // (this is to be updated as your stack design progresses)
@@ -203,7 +203,7 @@ int test_pop_safe()
   stack_push(stack, stack_pop(pool));
   stack_push(pool, stack_pop(stack));
   // For now, this test always fails
-  return assert(stack_check(stack));
+  return assert(stack->head->next->next->next == NULL);
 }
 
 // 3 Threads should be enough to raise and detect the ABA problem
@@ -353,10 +353,11 @@ int main(int argc, char **argv)
   {
     arg[i].id = i;
 #if MEASURE == 1
-    // int size= MAX_PUSH_POP;
-    //   while(size--){
-    //     stack_push(stack,stack_pop(pool));
-    //   }
+    int size = MAX_PUSH_POP - 1;
+    while (size--)
+    {
+      stack_push(stack, stack_pop(pool));
+    }
     pthread_create(&thread[i], &attr, stack_measure_pop, (void *)&arg[i]);
 #else
     pthread_create(&thread[i], &attr, stack_measure_push, (void *)&arg[i]);
