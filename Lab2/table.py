@@ -3,7 +3,7 @@ import re
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 
-def compile_and_run(nb_threads, non_blocking, measure,num_runs=20):
+def compile_and_run(nb_threads, non_blocking, measure,num_runs=1):
     
     max_times = []
 
