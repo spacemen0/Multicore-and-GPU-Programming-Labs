@@ -3,7 +3,6 @@
 .vscode
 .vs
 .DS_Store
-*.png
 mandelbrot-256-500-375--2-0*
 
 # Compiled Object files
