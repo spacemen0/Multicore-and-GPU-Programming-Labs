@@ -37,13 +37,20 @@ int main(int argc, const char *argv[])
 									{ return a * b; },
 									[](float a, float b)
 									{ return a + b; });
+	auto sepMap = skepu::Map<2>([](float a, float b)
+								{ return a * b; });
+	auto sepReduce = skepu::Reduce([](float a, float b)
+								   { return a + b; });
 
 	/* Skeleton instances */
 	//	auto instance = skepu::Map(userfunction);
 	// ...
 
 	/* SkePU containers */
-	skepu::Vector<float> v1(size, 1.0f), v2(size, 2.0f);
+	skepu::Vector<float>
+		v1(size, 1.0f),
+		v2(size, 2.0f);
+	skepu::Vector<float> resMap(size);
 
 	/* Compute and measure time */
 	float resComb, resSep;
@@ -53,8 +60,8 @@ int main(int argc, const char *argv[])
 
 	auto timeSep = skepu::benchmark::measureExecTime([&]
 													 {
-														 // your code here
-													 });
+														 sepMap(resMap,v1,v2);
+														 resSep = sepReduce(resMap); });
 
 	std::cout << "Time Combined: " << (timeComb.count() / 10E6) << " seconds.\n";
 	std::cout << "Time Separate: " << (timeSep.count() / 10E6) << " seconds.\n";
