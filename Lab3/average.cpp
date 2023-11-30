@@ -29,6 +29,17 @@ unsigned char average_kernel(skepu::Region2D<unsigned char> m, size_t elemPerPx)
 unsigned char average_kernel_1d(skepu::Region1D<unsigned char> m, size_t elemPerPx)
 {
 	// your code here
+	float scaling_column  = 1.0 / (m.oj/elemPerPx*2+1);
+	float scaling_row  = 1.0 / (m.oi*2+1);
+	
+	float res_column = 0;
+	float res_row = 0;
+
+	for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+			res_row += m(y, x);
+
+	for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+			res_row += m(y, x);		
 	return m(0);
 }
 
@@ -74,8 +85,8 @@ int main(int argc, char* argv[])
 	// Original version
 	{
 		auto conv = skepu::MapOverlap(average_kernel);
-		conv.setOverlap(radius, radius  * imageInfo.elementsPerPixel);
-	
+		conv.setOverlap(radius, radius * imageInfo.elementsPerPixel);
+
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 		{
 			conv(outputMatrix, inputMatrixPad, imageInfo.elementsPerPixel);

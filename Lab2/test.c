@@ -218,7 +218,6 @@ void aba_thread0()
 {
   Node *oldHead;
   Node *newNode = stack_pop(pool);
-  sleep(1);
   do
   {
     oldHead = stack->head;
@@ -229,7 +228,7 @@ void aba_thread0()
 void aba_thread1()
 {
   stack_push(pool, stack_pop(stack));
-  stack_push(pool, stack_pop(stack));
+  stack_pop(stack);
   stack_push(stack, stack_pop(pool));
 }
 #endif

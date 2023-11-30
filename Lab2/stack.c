@@ -76,20 +76,22 @@ stack_pop(stack_t *stack)
   Node *oldHead = stack->head;
   stack->head = oldHead->next;
   pthread_mutex_unlock(&stack->lock);
+  oldHead->next = NULL;
   return oldHead;
 
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
-  if (stack->head == NULL)
-  {
-    return NULL;
-  }
+
   Node *oldHead;
   do
   {
+    if (stack->head == NULL)
+    {
+      return NULL;
+    }
     oldHead = stack->head;
   } while (cas((size_t *)&(stack->head), (size_t)oldHead, (size_t)oldHead->next) != (size_t)oldHead);
-
+  oldHead->next = NULL;
   return oldHead;
 #else
   /*** Optional ***/
@@ -101,7 +103,6 @@ stack_pop(stack_t *stack)
   // This is to be updated as your implementation progresses
   stack_check((stack_t *)1);
 }
-
 
 void /* Return the type you prefer */
 stack_push(stack_t *stack, Node *newNode)

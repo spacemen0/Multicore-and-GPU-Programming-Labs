@@ -32,7 +32,7 @@ def compile_and_run(nb_threads, non_blocking, measure,num_runs=1):
     return max_time
 
 def generate_and_save_plot(non_blocking, measure):
-    num_threads_list = [4,5,6,7,8,9,10,11,12,13,14,15,16] 
+    num_threads_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] 
     timings = []
 
     for num_threads in num_threads_list:

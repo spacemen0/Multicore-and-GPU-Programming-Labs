@@ -267,23 +267,23 @@ int main(int argc, const char *argv[])
 	skepu::backend::Map<2, skepu_userfunction_skepu_skel_1sepMap_lambda_uf_yDsbzayy4c, decltype(&dotproduct_precompiled_MapKernel_lambda_uf_yDsbzayy4c), CLWrapperClass_dotproduct_precompiled_MapKernel_lambda_uf_yDsbzayy4c_arity_2> sepMap(dotproduct_precompiled_MapKernel_lambda_uf_yDsbzayy4c);
 	skepu::backend::Reduce1D<skepu_userfunction_skepu_skel_0sepReduce_lambda_uf_fa37JncCHr, decltype(&dotproduct_precompiled_ReduceKernel_lambda_uf_fa37JncCHr), CLWrapperClass_dotproduct_precompiled_ReduceKernel_lambda_uf_fa37JncCHr> sepReduce(dotproduct_precompiled_ReduceKernel_lambda_uf_fa37JncCHr);
 
-		/* Skeleton instances */
-		//	auto instance = skepu::Map(userfunction);
-		// ...
+	/* Skeleton instances */
+	//	auto instance = skepu::Map(userfunction);
+	// ...
 
-		/* SkePU containers */
-		skepu::Vector<float>
-			v1(size, 1.0f),
-		 v2(size, 2.0f);
+	/* SkePU containers */
+	skepu::Vector<float>
+		v1(size, 1.0f),
+		v2(size, 2.0f);
 	skepu::Vector<float> resMap(size);
 
 	/* Compute and measure time */
 	float resComb, resSep;
 
-	auto timeComb = skepu::benchmark::measureExecTime([&]
+	auto timeComb = skepu::benchmark::measureExecTimeIdempotent([&]
 													  { resComb = comb(v1, v2); });
 
-	auto timeSep = skepu::benchmark::measureExecTime([&]
+	auto timeSep = skepu::benchmark::measureExecTimeIdempotent([&]
 													 {
 														 sepMap(resMap,v1,v2);
 														 resSep = sepReduce(resMap); });
