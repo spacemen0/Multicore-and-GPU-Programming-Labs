@@ -16,7 +16,7 @@ __global__ void simple(float *c)
 }
 __global__ void ssqrt(float *i)
 {
-	i[threadIdx.x] = sqrt(threadIdx.x);
+	i[threadIdx.x] = sqrt((float)threadIdx.x);
 }
 
 int main()
