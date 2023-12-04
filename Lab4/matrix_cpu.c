@@ -31,10 +31,10 @@ int main()
 			b[i+j*N] = (float)j / N;
 		}
 	double start = GetSeconds();
-	double end = GetSeconds();
-	printf("start: %0.5lf end: %0.5lf\n",start,end);
+
 	add_matrix(a, b, c, N);
-printf("Execution Time: %0.5lf seconds\n", (end - start) / 1000000.0);
+		double end = GetSeconds();
+printf("Execution Time: %0.6lf seconds\n", (end - start));
 	// for (int i = 0; i < N; i++)
 	// {
 	// 	for (int j = 0; j < N; j++)

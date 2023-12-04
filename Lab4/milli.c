@@ -2,6 +2,7 @@
 // By Ingemar 2009
 
 #include <stdlib.h>
+#include<stdio.h>
 #include <sys/time.h>
 #include "milli.h"
 
@@ -34,17 +35,18 @@ int GetMicroseconds()
 	return (tv.tv_usec - timeStart.tv_usec) + (tv.tv_sec - timeStart.tv_sec)*1000000;
 }
 
-double GetSeconds()
-{
-	struct timeval tv;
-	
-	gettimeofday(&tv, NULL);
-	if (!hasStart)
-	{
-		hasStart = 1;
-		timeStart = tv;
-	}
-	return (double)(tv.tv_usec - timeStart.tv_usec) / 1000000.0 + (double)(tv.tv_sec - timeStart.tv_sec);
+double GetSeconds() {
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+
+
+    if (!hasStart) {
+        hasStart = 1;
+        timeStart = tv;
+    }
+
+    return (double)(tv.tv_usec - timeStart.tv_usec) / 1000000.0 + (double)(tv.tv_sec - timeStart.tv_sec);
 }
 
 // If you want to start from right now.
