@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <math.h>
 
-const int N = 16;
-const int blocksize = 16;
+const int N = 100;
+const int blocksize = 100;
 
 __global__ void simple(float *c)
 {

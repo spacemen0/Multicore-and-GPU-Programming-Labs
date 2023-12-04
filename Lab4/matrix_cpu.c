@@ -2,6 +2,7 @@
 // gcc matrix_cpu.c -o matrix_cpu -std=c99
 
 #include <stdio.h>
+#include<milli.h>
 
 void add_matrix(float *a, float *b, float *c, int N)
 {
@@ -30,8 +31,11 @@ int main()
 			b[i+j*N] = (float)j / N;
 		}
 	
+	int start = GetMicroseconds();
+	int end = GetMicroseconds();
+	printf("start: %d end: %d\n",start,end);
 	add_matrix(a, b, c, N);
-	
+printf("Execution Time: %e seconds\n", ((double)(end - start)) / 1000000.0);
 	for (int i = 0; i < N; i++)
 	{
 		for (int j = 0; j < N; j++)
