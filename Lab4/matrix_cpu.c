@@ -16,7 +16,7 @@ void add_matrix(float *a, float *b, float *c, int N)
 
 int main()
 {
-    const int N = 1024;
+    const int N = 512;
 
     // Allocate memory for matrices
     float *a = (float *)malloc(N * N * sizeof(float));
@@ -34,26 +34,26 @@ int main()
     for (int i = 0; i < N; i++)
         for (int j = 0; j < N; j++)
         {
-            a[i + j * N] = 10 + i;
-            b[i + j * N] = (float)j / N;
+            a[i + j * N] = j + i;
+            b[i + j * N] = i+j;
         }
 
-    double start = GetSeconds();
+    double start = GetMilliseconds();
     add_matrix(a, b, c, N);
-    double end = GetSeconds();
+    double end = GetMilliseconds();
 
-    printf("Execution Time: %0.6lf seconds\n", (end - start));
+    printf("Execution Time: %lf ms\n", (end - start));
 
     // Uncomment the following code if you want to print the result matrix
     
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < N; j++)
-        {
-            printf("%0.2f ", c[i + j * N]);
-        }
-        printf("\n");
-    }
+    // for (int i = 0; i < N; i++)
+    // {
+    //     for (int j = 0; j < N; j++)
+    //     {
+    //         printf("%0.2f ", c[i + j * N]);
+    //     }
+    //     printf("\n");
+    // }
     
 
     // Free allocated memory

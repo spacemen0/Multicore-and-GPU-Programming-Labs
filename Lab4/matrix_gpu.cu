@@ -4,12 +4,11 @@
 using namespace std;
 
 __global__ void matrixAddition(float* A, float* B, float* C, int N) {
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    printf("row: %d, col: %d\n", row, col);
-    if (row < N && col < N)
+    int ix = blockIdx.x * blockDim.x + threadIdx.x;
+    int iy = blockIdx.y * blockDim.y + threadIdx.y;
+    int index = ix+iy*N;
+    if (ix < N && iy < N)
     {
-        int index = row * N + col;
         C[index] = A[index] + B[index];
     }
 }
@@ -32,11 +31,11 @@ void printMatrix(float* matrix, int N) {
 }
 
 int main() {
-    const int N = 1024;  
+    const int N = 512;  
 
     
-    float* h_A = (float *)malloc(N * N * sizeof(float));
-    float* h_B = (float *)malloc(N * N * sizeof(float));
+    float* h_A = new float[N*N];
+    float* h_B = new float[N*N];
     initializeMatrix(h_A, N);
     initializeMatrix(h_B, N);
     // printMatrix(h_A, N);
@@ -44,8 +43,7 @@ int main() {
     // printMatrix(h_B, N);
     cout << "---------------------------------------------------------" << endl;
 
-    float* h_C = (float *)malloc(N * N * sizeof(float));
-
+    float *h_C = new float[N * N];
 
     float* d_A, *d_B, *d_C;
     cudaMalloc((void**)&d_A, N * N * sizeof(float));
@@ -55,8 +53,8 @@ int main() {
     cudaMemcpy(d_A, h_A, N * N * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, h_B, N * N * sizeof(float), cudaMemcpyHostToDevice);
 
-    dim3 blockSize(N, N);
-    dim3 gridSize(1, 1);
+    dim3 blockSize(32, 32);
+    dim3 gridSize((N+blockSize.x-1)/blockSize.x, (N+blockSize.y-1)/blockSize.y);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -65,7 +63,11 @@ int main() {
     cudaEventRecord(start);
 
     matrixAddition<<<gridSize, blockSize>>>(d_A, d_B, d_C, N);
-
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) 
+    {
+        cout << "Error: " << cudaGetErrorString(err) << endl;
+    }
     cudaEventRecord(stop);
     cudaEventSynchronize(start);
     cudaEventSynchronize(stop);
@@ -87,7 +89,6 @@ int main() {
     delete[] h_B;
     delete[] h_C;
 
-    // Destroy CUDA events
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 

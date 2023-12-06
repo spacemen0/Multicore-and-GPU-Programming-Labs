@@ -48,8 +48,16 @@ unsigned char average_kernel_1d(skepu::Region1D<unsigned char> m, size_t elemPer
 
 unsigned char gaussian_kernel(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, size_t elemPerPx)
 {
-	// your code here
-	return m(0);
+	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
+
+	float res = 0;
+
+	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
+		res += m(x);
+
+	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+	// 	res_row += m(y, x);
+	return res * scaling;
 }
 
 
@@ -267,15 +275,16 @@ int main(int argc, char *argv[])
 		skepu::backend::MapOverlap1D<skepu_userfunction_skepu_skel_0conv_average_kernel_1d, decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Row), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Col), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_ColMulti), CLWrapperClass_average_precompiled_OverlapKernel_average_kernel_1d> conv(average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Row, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Col, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_ColMulti);
 		conv.setOverlapMode(skepu::Overlap::RowWise);
 		conv.setOverlap(radius * imageInfo.elementsPerPixel);
+		skepu::Matrix<unsigned char> temp(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
 
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 														   { 
-															for (int i = 0; i <= inputMatrix.total_rows(); i++) conv(outputMatrix[i], inputMatrix[i], imageInfo.elementsPerPixel); 
+															conv(temp, inputMatrix, imageInfo.elementsPerPixel); 
 															conv.setOverlapMode(skepu::Overlap::ColWise);
 															conv.setOverlap(radius);
-															for (int i = 0; i <= inputMatrix.total_cols(); i++) conv(outputMatrix[i], inputMatrix[i], 1); });
+															conv(outputMatrix, temp, 1); });
 
-		//	WritePngFileMatrix(outputMatrix, outputFile + "-separable.png", colorType, imageInfo);
+		WritePngFileMatrix(outputMatrix, outputFile + "-separable.png", colorType, imageInfo);
 		std::cout << "Time for separable: " << (timeTaken.count() / 10E6) << "\n";
 	}
 
