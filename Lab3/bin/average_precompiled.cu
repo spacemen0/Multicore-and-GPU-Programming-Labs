@@ -22,7 +22,7 @@
 
 unsigned char average_kernel(skepu::Region2D<unsigned char> m, size_t elemPerPx)
 {
-	float scaling = 1.0 / ((m.oj/elemPerPx*2+1)*(m.oi*2+1));
+	float scaling = 1.0 / ((m.oj / elemPerPx * 2 + 1) * (m.oi * 2 + 1));
 	float res = 0;
 	for (int y = -m.oi; y <= m.oi; ++y)
 		for (int x = -m.oj; x <= m.oj; x += elemPerPx)
@@ -33,19 +33,24 @@ unsigned char average_kernel(skepu::Region2D<unsigned char> m, size_t elemPerPx)
 unsigned char average_kernel_1d(skepu::Region1D<unsigned char> m, size_t elemPerPx)
 {
 	// your code here
-	return m(0);
+	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
+	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
+
+	float res = 0;
+
+	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
+		res += m(x);
+
+	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+	// 	res_row += m(y, x);
+	return res * scaling;
 }
-
-
 
 unsigned char gaussian_kernel(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, size_t elemPerPx)
 {
 	// your code here
 	return m(0);
 }
-
-
-
 
 
 struct skepu_userfunction_skepu_skel_0conv_average_kernel_1d
@@ -75,7 +80,17 @@ constexpr static bool prefersMatrix = 0;
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Region1D<unsigned char> m, unsigned long elemPerPx)
 {
 	// your code here
-	return m(0);
+	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
+	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
+
+	float res = 0;
+
+	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
+		res += m(x);
+
+	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+	// 	res_row += m(y, x);
+	return res * scaling;
 }
 #undef SKEPU_USING_BACKEND_CUDA
 
@@ -89,7 +104,17 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Re
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region1D<unsigned char> m, unsigned long elemPerPx)
 {
 	// your code here
-	return m(0);
+	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
+	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
+
+	float res = 0;
+
+	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
+		res += m(x);
+
+	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+	// 	res_row += m(y, x);
+	return res * scaling;
 }
 #undef SKEPU_USING_BACKEND_OMP
 
@@ -103,7 +128,17 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region1D<uns
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char CPU(skepu::Region1D<unsigned char> m, unsigned long elemPerPx)
 {
 	// your code here
-	return m(0);
+	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
+	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
+
+	float res = 0;
+
+	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
+		res += m(x);
+
+	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+	// 	res_row += m(y, x);
+	return res * scaling;
 }
 #undef SKEPU_USING_BACKEND_CPU
 };
@@ -137,7 +172,7 @@ constexpr static bool prefersMatrix = 0;
 #define VARIANT_CUDA(block) block
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Region2D<unsigned char> m, unsigned long elemPerPx)
 {
-	float scaling = 1.0 / ((m.oj/elemPerPx*2+1)*(m.oi*2+1));
+	float scaling = 1.0 / ((m.oj / elemPerPx * 2 + 1) * (m.oi * 2 + 1));
 	float res = 0;
 	for (int y = -m.oi; y <= m.oi; ++y)
 		for (int x = -m.oj; x <= m.oj; x += elemPerPx)
@@ -155,7 +190,7 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Re
 #define VARIANT_CUDA(block)
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region2D<unsigned char> m, unsigned long elemPerPx)
 {
-	float scaling = 1.0 / ((m.oj/elemPerPx*2+1)*(m.oi*2+1));
+	float scaling = 1.0 / ((m.oj / elemPerPx * 2 + 1) * (m.oi * 2 + 1));
 	float res = 0;
 	for (int y = -m.oi; y <= m.oi; ++y)
 		for (int x = -m.oj; x <= m.oj; x += elemPerPx)
@@ -173,7 +208,7 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region2D<uns
 #define VARIANT_CUDA(block) block
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char CPU(skepu::Region2D<unsigned char> m, unsigned long elemPerPx)
 {
-	float scaling = 1.0 / ((m.oj/elemPerPx*2+1)*(m.oi*2+1));
+	float scaling = 1.0 / ((m.oj / elemPerPx * 2 + 1) * (m.oi * 2 + 1));
 	float res = 0;
 	for (int y = -m.oi; y <= m.oi; ++y)
 		for (int x = -m.oj; x <= m.oj; x += elemPerPx)
@@ -185,26 +220,26 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char CPU(skepu::Region2D<uns
 
 #include "average_precompiled_Overlap2DKernel_average_kernel.cu"
 #include "average_precompiled_Overlap2DKernel_average_kernel_cl_source.inl"
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	if (argc < 5)
 	{
 		std::cout << "Usage: " << argv[0] << " input output radius [backend]\n";
 		exit(1);
 	}
-	
+
 	LodePNGColorType colorType = LCT_RGB;
 	std::string inputFileName = argv[1];
 	std::string outputFileName = argv[2];
 	const int radius = atoi(argv[3]);
 	auto spec = skepu::BackendSpec{argv[4]};
 	skepu::setGlobalBackendSpec(spec);
-	
+
 	// Create the full path for writing the image.
 	std::stringstream ss;
 	ss << (2 * radius + 1) << "x" << (2 * radius + 1);
 	std::string outputFile = outputFileName + ss.str();
-	
+
 	// Read the padded image into a matrix. Create the output matrix without padding.
 	// Padded version for 2D MapOverlap, non-padded for 1D MapOverlap
 	ImageInfo imageInfo;
@@ -212,57 +247,52 @@ int main(int argc, char* argv[])
 	skepu::Matrix<unsigned char> inputMatrix = ReadPngFileToMatrix(inputFileName, colorType, imageInfo);
 	skepu::Matrix<unsigned char> outputMatrix(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
 	// more containers...?
-	
+
 	// Original version
 	{
 		skepu::backend::MapOverlap2D<skepu_userfunction_skepu_skel_1conv_average_kernel, decltype(&average_precompiled_Overlap2DKernel_average_kernel_conv_cuda_2D_kernel), CLWrapperClass_average_precompiled_Overlap2DKernel_average_kernel> conv(average_precompiled_Overlap2DKernel_average_kernel_conv_cuda_2D_kernel);
-		std::cout << imageInfo.elementsPerPixel << std::endl;
 		conv.setOverlap(radius, radius * imageInfo.elementsPerPixel);
 
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
-		{
-			conv(outputMatrix, inputMatrixPad, imageInfo.elementsPerPixel);
-		});
-	
+														   { conv(outputMatrix, inputMatrixPad, imageInfo.elementsPerPixel); });
+
 		WritePngFileMatrix(outputMatrix, outputFile + "-average.png", colorType, imageInfo);
 		std::cout << "Time for combined: " << (timeTaken.count() / 10E6) << "\n";
 	}
-	
-	
+
 	// Separable version
 	// use conv.setOverlapMode(skepu::Overlap::[ColWise RowWise]);
 	// and conv.setOverlap(<integer>)
 	{
 		skepu::backend::MapOverlap1D<skepu_userfunction_skepu_skel_0conv_average_kernel_1d, decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Row), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Col), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_ColMulti), CLWrapperClass_average_precompiled_OverlapKernel_average_kernel_1d> conv(average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Row, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Col, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_ColMulti);
-	
+		conv.setOverlapMode(skepu::Overlap::RowWise);
+		conv.setOverlap(radius * imageInfo.elementsPerPixel);
+
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
-		{
-			// your code here
-		});
-		
-	//	WritePngFileMatrix(outputMatrix, outputFile + "-separable.png", colorType, imageInfo);
+														   { 
+															for (int i = 0; i <= inputMatrix.total_rows(); i++) conv(outputMatrix.[i], inputMatrix.[i], imageInfo.elementsPerPixel); 
+															conv.setOverlapMode(skepu::Overlap::ColWise);
+															conv.setOverlap(radius);
+															for (int i = 0; i <= inputMatrix.total_cols(); i++) conv(outputMatrix.[i], inputMatrix.[i], 1); });
+
+		//	WritePngFileMatrix(outputMatrix, outputFile + "-separable.png", colorType, imageInfo);
 		std::cout << "Time for separable: " << (timeTaken.count() / 10E6) << "\n";
 	}
-	
-	
+
 	// Separable gaussian
 	{
 		skepu::Vector<float> stencil = sampleGaussian(radius);
-			
+
 		// skeleton instance, etc here (remember to set backend)
-	
+
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
-		{
-			// your code here
-		});
-	
-	//	WritePngFileMatrix(outputMatrix, outputFile + "-gaussian.png", colorType, imageInfo);
+														   {
+															   // your code here
+														   });
+
+		//	WritePngFileMatrix(outputMatrix, outputFile + "-gaussian.png", colorType, imageInfo);
 		std::cout << "Time for gaussian: " << (timeTaken.count() / 10E6) << "\n";
 	}
-	
-	
-	
+
 	return 0;
 }
-
-
