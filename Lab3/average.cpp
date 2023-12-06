@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 														   { 
-															for (int i = 0; i <= inputMatrix.total_rows(); i++) conv(outputMatrix[i], inputMatrix[i], imageInfo.elementsPerPixel); 
+															for (int i = 0; i <= inputMatrix.total_rows(); i++) conv(outputMatrix.m_rows[i], inputMatrix[i], imageInfo.elementsPerPixel); 
 															conv.setOverlapMode(skepu::Overlap::ColWise);
 															conv.setOverlap(radius);
 															for (int i = 0; i <= inputMatrix.total_cols(); i++) conv(outputMatrix.col(i), inputMatrix.col(i), 1); });
