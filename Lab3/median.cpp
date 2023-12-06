@@ -16,14 +16,47 @@
 
 #include "support.h"
 
-
 unsigned char median_kernel(skepu::Region2D<unsigned char> image, size_t elemPerPx)
 {
-	// your code here
-	return image(0,0);
+	const size_t size = (2 * image.oi + 1) * elemPerPx;
+	unsigned char values[size];
+
+	// Copy pixel values from the region to the array
+	for (int y = -image.oi; y <= image.oi; ++y)
+	{
+		for (int x = -image.oj; x <= image.oj; x += elemPerPx)
+		{
+			values[y * elemPerPx + x + image.oi] = image(y, x);
+		}
+	}
+
+	// Simple Bubble Sort for sorting the array
+	for (size_t i = 0; i < size - 1; ++i)
+	{
+		for (size_t j = 0; j < size - i - 1; ++j)
+		{
+			if (values[j] > values[j + 1])
+			{
+				auto temp = values[j];
+				values[j] = values[j + 1];
+				values[j + 1] = temp;
+			}
+		}
+	}
+
+	// Find the median value
+	unsigned char median;
+	if (size % 2 == 0)
+	{
+		median = (values[size / 2 - 1] + values[size / 2]) / 2;
+	}
+	else
+	{
+		median = values[size / 2];
+	}
+
+	return median;
 }
-
-
 
 int main(int argc, char* argv[])
 {
