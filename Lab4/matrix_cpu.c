@@ -45,7 +45,7 @@ int main()
     printf("Execution Time: %0.6lf seconds\n", (end - start));
 
     // Uncomment the following code if you want to print the result matrix
-    /*
+    
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < N; j++)
@@ -54,7 +54,7 @@ int main()
         }
         printf("\n");
     }
-    */
+    
 
     // Free allocated memory
     free(a);

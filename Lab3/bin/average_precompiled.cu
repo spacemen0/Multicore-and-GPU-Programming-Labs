@@ -270,10 +270,10 @@ int main(int argc, char *argv[])
 
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 														   { 
-															for (int i = 0; i <= inputMatrix.total_rows(); i++) conv(outputMatrix.[i], inputMatrix.[i], imageInfo.elementsPerPixel); 
+															for (int i = 0; i <= inputMatrix.total_rows(); i++) conv(outputMatrix[i], inputMatrix[i], imageInfo.elementsPerPixel); 
 															conv.setOverlapMode(skepu::Overlap::ColWise);
 															conv.setOverlap(radius);
-															for (int i = 0; i <= inputMatrix.total_cols(); i++) conv(outputMatrix.[i], inputMatrix.[i], 1); });
+															for (int i = 0; i <= inputMatrix.total_cols(); i++) conv(outputMatrix[i], inputMatrix[i], 1); });
 
 		//	WritePngFileMatrix(outputMatrix, outputFile + "-separable.png", colorType, imageInfo);
 		std::cout << "Time for separable: " << (timeTaken.count() / 10E6) << "\n";

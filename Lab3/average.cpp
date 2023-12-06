@@ -44,8 +44,16 @@ unsigned char average_kernel_1d(skepu::Region1D<unsigned char> m, size_t elemPer
 
 unsigned char gaussian_kernel(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, size_t elemPerPx)
 {
-	// your code here
-	return m(0);
+	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
+
+	float res = 0;
+
+	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
+		res += m(x);
+
+	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+	// 	res_row += m(y, x);
+	return res * scaling;
 }
 
 int main(int argc, char *argv[])
@@ -98,10 +106,10 @@ int main(int argc, char *argv[])
 
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 														   { 
-															for (int i = 0; i <= inputMatrix.total_rows(); i++) conv(outputMatrix.[i], inputMatrix.[i], imageInfo.elementsPerPixel); 
+															for (int i = 0; i <= inputMatrix.total_rows(); i++) conv(outputMatrix[i], inputMatrix[i], imageInfo.elementsPerPixel); 
 															conv.setOverlapMode(skepu::Overlap::ColWise);
 															conv.setOverlap(radius);
-															for (int i = 0; i <= inputMatrix.total_cols(); i++) conv(outputMatrix.[i], inputMatrix.[i], 1); });
+															for (int i = 0; i <= inputMatrix.total_cols(); i++) conv(outputMatrix[i], inputMatrix[i], 1); });
 
 		//	WritePngFileMatrix(outputMatrix, outputFile + "-separable.png", colorType, imageInfo);
 		std::cout << "Time for separable: " << (timeTaken.count() / 10E6) << "\n";
