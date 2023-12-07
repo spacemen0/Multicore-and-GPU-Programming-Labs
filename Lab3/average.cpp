@@ -29,29 +29,20 @@ unsigned char average_kernel(skepu::Region2D<unsigned char> m, size_t elemPerPx)
 
 unsigned char average_kernel_1d(skepu::Region1D<unsigned char> m, size_t elemPerPx)
 {
-	// your code here
-	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
 	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
-
 	float res = 0;
-
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 		res += m(x);
-
-	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
-	// 	res_row += m(y, x);
 	return res * scaling;
 }
 
 unsigned char gaussian_kernel(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, size_t elemPerPx)
 {
 	float res = 0;
-
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 	{
-		res += m(x) * stencil[(x + m.oi) / elemPerPx];
+		res += m(x) * stencil[(m.oi+ x)/ elemPerPx];
 	}
-
 	return res;
 }
 
@@ -82,7 +73,7 @@ int main(int argc, char *argv[])
 	skepu::Matrix<unsigned char> inputMatrix = ReadPngFileToMatrix(inputFileName, colorType, imageInfo);
 	skepu::Matrix<unsigned char> outputMatrix(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
 	// more containers...?
-
+	skepu::Matrix<unsigned char> temp(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
 	// Original version
 	{
 		auto conv = skepu::MapOverlap(average_kernel);
@@ -102,8 +93,6 @@ int main(int argc, char *argv[])
 		auto conv = skepu::MapOverlap(average_kernel_1d);
 		conv.setOverlapMode(skepu::Overlap::RowWise);
 		conv.setOverlap(radius * imageInfo.elementsPerPixel);
-		skepu::Matrix<unsigned char> temp(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
-
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 														   { 
 															conv(temp, inputMatrix, imageInfo.elementsPerPixel); 
@@ -118,19 +107,15 @@ int main(int argc, char *argv[])
 	// Separable gaussian
 	{
 		skepu::Vector<float> stencil = sampleGaussian(radius);
-
-		// skeleton instance, etc here (remember to set backend)
 		auto conv = skepu::MapOverlap(gaussian_kernel);
-		conv.setOverlapMode(skepu::Overlap::RowWise);
-		// conv.setOverlap(radius * imageInfo.elementsPerPixel);
-		skepu::Matrix<unsigned char> temp(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
-
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 														   {
-															  conv(temp, inputMatrix, stencil, imageInfo.elementsPerPixel);
-															  conv.setOverlapMode(skepu::Overlap::ColWise);
-															//   conv.setOverlap(radius);
-															  conv(outputMatrix, temp, stencil, 1); });
+															conv.setOverlapMode(skepu::Overlap::RowWise);
+															conv.setOverlap(radius * imageInfo.elementsPerPixel);
+															conv(temp, inputMatrix, stencil, imageInfo.elementsPerPixel);
+															conv.setOverlapMode(skepu::Overlap::ColWise);
+															conv.setOverlap(radius);
+															conv(outputMatrix, temp, stencil, 1); });
 
 		WritePngFileMatrix(outputMatrix, outputFile + "-gaussian.png", colorType, imageInfo);
 		std::cout << "Time for gaussian: " << (timeTaken.count() / 10E6) << "\n";

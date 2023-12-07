@@ -101,19 +101,12 @@ float skepu_vec_proxy_access_float(skepu_vec_proxy_float v, size_t i)
 { return v.data[i]; }
 static unsigned char gaussian_kernel(skepu_region1d_unsigned__space__char m, skepu_vec_proxy_float stencil, unsigned long elemPerPx)
 {
-	float red = 0, green = 0, blue = 0;
-
-	// Calculate the weighted sum for each color channel
+	float res = 0;
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 	{
-		red += skepu_region_access_1d_unsigned__space__char(m,x);					  // Assuming Red channel
-		green += skepu_region_access_1d_unsigned__space__char(m,x + elemPerPx / 3);	  // Assuming Green channel
-		blue += skepu_region_access_1d_unsigned__space__char(m,x + 2 * elemPerPx / 3); // Assuming Blue channel
+		res += skepu_region_access_1d_unsigned__space__char(m,x) * stencil.data[(m.oi+ x)/ elemPerPx];
 	}
-
-	// Combine the color channels with the stencil values
-	float result = red * stencil.data[0] + green * stencil.data[1] + blue * stencil.data[2];
-	return result;
+	return res;
 }
 
 
