@@ -33,35 +33,21 @@ unsigned char average_kernel(skepu::Region2D<unsigned char> m, size_t elemPerPx)
 
 unsigned char average_kernel_1d(skepu::Region1D<unsigned char> m, size_t elemPerPx)
 {
-	// your code here
-	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
 	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
-
 	float res = 0;
-
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 		res += m(x);
-
-	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
-	// 	res_row += m(y, x);
 	return res * scaling;
 }
 
 unsigned char gaussian_kernel(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, size_t elemPerPx)
 {
-	float red = 0, green = 0, blue = 0;
-
-	// Calculate the weighted sum for each color channel
+	float res = 0;
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 	{
-		red += m(x);					  // Assuming Red channel
-		green += m(x + elemPerPx / 3);	  // Assuming Green channel
-		blue += m(x + 2 * elemPerPx / 3); // Assuming Blue channel
+		res += m(x) * stencil[(m.oi+ x)/ elemPerPx];
 	}
-
-	// Combine the color channels with the stencil values
-	float result = red * stencil[0] + green * stencil[1] + blue * stencil[2];
-	return result;
+	return res;
 }
 
 
@@ -91,19 +77,12 @@ constexpr static bool prefersMatrix = 0;
 #define VARIANT_CUDA(block) block
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, unsigned long elemPerPx)
 {
-	float red = 0, green = 0, blue = 0;
-
-	// Calculate the weighted sum for each color channel
+	float res = 0;
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 	{
-		red += m(x);					  // Assuming Red channel
-		green += m(x + elemPerPx / 3);	  // Assuming Green channel
-		blue += m(x + 2 * elemPerPx / 3); // Assuming Blue channel
+		res += m(x) * stencil.data[(m.oi+ x)/ elemPerPx];
 	}
-
-	// Combine the color channels with the stencil values
-	float result = red * stencil.data[0] + green * stencil.data[1] + blue * stencil.data[2];
-	return result;
+	return res;
 }
 #undef SKEPU_USING_BACKEND_CUDA
 
@@ -116,19 +95,12 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Re
 #define VARIANT_CUDA(block)
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, unsigned long elemPerPx)
 {
-	float red = 0, green = 0, blue = 0;
-
-	// Calculate the weighted sum for each color channel
+	float res = 0;
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 	{
-		red += m(x);					  // Assuming Red channel
-		green += m(x + elemPerPx / 3);	  // Assuming Green channel
-		blue += m(x + 2 * elemPerPx / 3); // Assuming Blue channel
+		res += m(x) * stencil.data[(m.oi+ x)/ elemPerPx];
 	}
-
-	// Combine the color channels with the stencil values
-	float result = red * stencil.data[0] + green * stencil.data[1] + blue * stencil.data[2];
-	return result;
+	return res;
 }
 #undef SKEPU_USING_BACKEND_OMP
 
@@ -141,19 +113,12 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region1D<uns
 #define VARIANT_CUDA(block) block
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char CPU(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, unsigned long elemPerPx)
 {
-	float red = 0, green = 0, blue = 0;
-
-	// Calculate the weighted sum for each color channel
+	float res = 0;
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 	{
-		red += m(x);					  // Assuming Red channel
-		green += m(x + elemPerPx / 3);	  // Assuming Green channel
-		blue += m(x + 2 * elemPerPx / 3); // Assuming Blue channel
+		res += m(x) * stencil.data[(m.oi+ x)/ elemPerPx];
 	}
-
-	// Combine the color channels with the stencil values
-	float result = red * stencil.data[0] + green * stencil.data[1] + blue * stencil.data[2];
-	return result;
+	return res;
 }
 #undef SKEPU_USING_BACKEND_CPU
 };
@@ -187,17 +152,10 @@ constexpr static bool prefersMatrix = 0;
 #define VARIANT_CUDA(block) block
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Region1D<unsigned char> m, unsigned long elemPerPx)
 {
-	// your code here
-	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
 	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
-
 	float res = 0;
-
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 		res += m(x);
-
-	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
-	// 	res_row += m(y, x);
 	return res * scaling;
 }
 #undef SKEPU_USING_BACKEND_CUDA
@@ -211,17 +169,10 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Re
 #define VARIANT_CUDA(block)
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region1D<unsigned char> m, unsigned long elemPerPx)
 {
-	// your code here
-	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
 	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
-
 	float res = 0;
-
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 		res += m(x);
-
-	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
-	// 	res_row += m(y, x);
 	return res * scaling;
 }
 #undef SKEPU_USING_BACKEND_OMP
@@ -235,17 +186,10 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region1D<uns
 #define VARIANT_CUDA(block) block
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char CPU(skepu::Region1D<unsigned char> m, unsigned long elemPerPx)
 {
-	// your code here
-	// float scaling_column = 1.0 / (m.oj / elemPerPx * 2 + 1);
 	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
-
 	float res = 0;
-
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 		res += m(x);
-
-	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
-	// 	res_row += m(y, x);
 	return res * scaling;
 }
 #undef SKEPU_USING_BACKEND_CPU
@@ -355,7 +299,7 @@ int main(int argc, char *argv[])
 	skepu::Matrix<unsigned char> inputMatrix = ReadPngFileToMatrix(inputFileName, colorType, imageInfo);
 	skepu::Matrix<unsigned char> outputMatrix(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
 	// more containers...?
-
+	skepu::Matrix<unsigned char> temp(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
 	// Original version
 	{
 		skepu::backend::MapOverlap2D<skepu_userfunction_skepu_skel_2conv_average_kernel, decltype(&average_precompiled_Overlap2DKernel_average_kernel_conv_cuda_2D_kernel), CLWrapperClass_average_precompiled_Overlap2DKernel_average_kernel> conv(average_precompiled_Overlap2DKernel_average_kernel_conv_cuda_2D_kernel);
@@ -375,8 +319,6 @@ int main(int argc, char *argv[])
 		skepu::backend::MapOverlap1D<skepu_userfunction_skepu_skel_1conv_average_kernel_1d, decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Row), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Col), decltype(&average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_ColMulti), CLWrapperClass_average_precompiled_OverlapKernel_average_kernel_1d> conv(average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Row, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_Col, average_precompiled_Overlap1DKernel_average_kernel_1d_MapOverlapKernel_CU_Matrix_ColMulti);
 		conv.setOverlapMode(skepu::Overlap::RowWise);
 		conv.setOverlap(radius * imageInfo.elementsPerPixel);
-		skepu::Matrix<unsigned char> temp(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
-
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 														   { 
 															conv(temp, inputMatrix, imageInfo.elementsPerPixel); 
@@ -391,22 +333,20 @@ int main(int argc, char *argv[])
 	// Separable gaussian
 	{
 		skepu::Vector<float> stencil = sampleGaussian(radius);
-
-		// skeleton instance, etc here (remember to set backend)
 		skepu::backend::MapOverlap1D<skepu_userfunction_skepu_skel_0conv_gaussian_kernel, decltype(&average_precompiled_Overlap1DKernel_gaussian_kernel_MapOverlapKernel_CU), decltype(&average_precompiled_Overlap1DKernel_gaussian_kernel_MapOverlapKernel_CU_Matrix_Row), decltype(&average_precompiled_Overlap1DKernel_gaussian_kernel_MapOverlapKernel_CU_Matrix_Col), decltype(&average_precompiled_Overlap1DKernel_gaussian_kernel_MapOverlapKernel_CU_Matrix_ColMulti), CLWrapperClass_average_precompiled_OverlapKernel_gaussian_kernel> conv(average_precompiled_Overlap1DKernel_gaussian_kernel_MapOverlapKernel_CU, average_precompiled_Overlap1DKernel_gaussian_kernel_MapOverlapKernel_CU_Matrix_Row, average_precompiled_Overlap1DKernel_gaussian_kernel_MapOverlapKernel_CU_Matrix_Col, average_precompiled_Overlap1DKernel_gaussian_kernel_MapOverlapKernel_CU_Matrix_ColMulti);
-		conv.setOverlapMode(skepu::Overlap::RowWise);
-		// conv.setOverlap(radius * imageInfo.elementsPerPixel);
-		skepu::Matrix<unsigned char> temp(imageInfo.height, imageInfo.width * imageInfo.elementsPerPixel, 120);
-
+		// for(auto i: stencilH) {
+		// 	std::cout<<i<<" ";
+		// }
 		auto timeTaken = skepu::benchmark::measureExecTime([&]
 														   {
-															  conv(temp, inputMatrix, stencil, imageInfo.elementsPerPixel);
-															  conv.setOverlapMode(skepu::Overlap::ColWise);
-															//   conv.setOverlap(radius);
-															  conv(outputMatrix, temp, stencil, 1);
-														   });
+															conv.setOverlapMode(skepu::Overlap::RowWise);
+															conv.setOverlap(radius * imageInfo.elementsPerPixel);
+															conv(temp, inputMatrix, stencil, imageInfo.elementsPerPixel);
+															conv.setOverlapMode(skepu::Overlap::ColWise);
+															conv.setOverlap(radius);
+															conv(outputMatrix, temp, stencil, 1); });
 
-			WritePngFileMatrix(outputMatrix, outputFile + "-gaussian.png", colorType, imageInfo);
+		WritePngFileMatrix(outputMatrix, outputFile + "-gaussian.png", colorType, imageInfo);
 		std::cout << "Time for gaussian: " << (timeTaken.count() / 10E6) << "\n";
 	}
 
