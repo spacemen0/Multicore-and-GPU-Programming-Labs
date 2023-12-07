@@ -49,7 +49,7 @@ unsigned char gaussian_kernel(skepu::Region1D<unsigned char> m, const skepu::Vec
 
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 	{
-		res += m(x) * stencil[x+m.oi/elemPerPx];
+		res += m(x) * stencil[(x + m.oi) / elemPerPx];
 	}
 
 	return res;
@@ -130,10 +130,9 @@ int main(int argc, char *argv[])
 															  conv(temp, inputMatrix, stencil, imageInfo.elementsPerPixel);
 															  conv.setOverlapMode(skepu::Overlap::ColWise);
 															//   conv.setOverlap(radius);
-															  conv(outputMatrix, temp, stencil, 1);
-														   });
+															  conv(outputMatrix, temp, stencil, 1); });
 
-			WritePngFileMatrix(outputMatrix, outputFile + "-gaussian.png", colorType, imageInfo);
+		WritePngFileMatrix(outputMatrix, outputFile + "-gaussian.png", colorType, imageInfo);
 		std::cout << "Time for gaussian: " << (timeTaken.count() / 10E6) << "\n";
 	}
 
