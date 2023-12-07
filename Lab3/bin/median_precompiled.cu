@@ -22,19 +22,17 @@
 
 unsigned char median_kernel(skepu::Region2D<unsigned char> image, size_t elemPerPx)
 {
-	const size_t size = (2 * image.oi + 1) * elemPerPx;
-	unsigned char values[size];
+	const size_t size = (2 * image.oi + 1) + (2* image.oj/elemPerPx + 1);
+	unsigned char values [size];
 
-	// Copy pixel values from the region to the array
 	for (int y = -image.oi; y <= image.oi; ++y)
 	{
 		for (int x = -image.oj; x <= image.oj; x += elemPerPx)
 		{
-			values[y * elemPerPx + x + image.oi] = image(y, x);
+			values[(y+image.oi) * image.oj/elemPerPx + (x + image.oj)/elemPerPx] = image(y, x);
 		}
 	}
 
-	// Simple Bubble Sort for sorting the array
 	for (size_t i = 0; i < size - 1; ++i)
 	{
 		for (size_t j = 0; j < size - i - 1; ++j)
@@ -48,7 +46,6 @@ unsigned char median_kernel(skepu::Region2D<unsigned char> image, size_t elemPer
 		}
 	}
 
-	// Find the median value
 	unsigned char median;
 	if (size % 2 == 0)
 	{
@@ -89,19 +86,17 @@ constexpr static bool prefersMatrix = 0;
 #define VARIANT_CUDA(block) block
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Region2D<unsigned char> image, unsigned long elemPerPx)
 {
-	const size_t size = (2 * image.oi + 1) * elemPerPx;
-	unsigned char values[size];
+	const size_t size = (2 * image.oi + 1) + (2* image.oj/elemPerPx + 1);
+	unsigned char values [size];
 
-	// Copy pixel values from the region to the array
 	for (int y = -image.oi; y <= image.oi; ++y)
 	{
 		for (int x = -image.oj; x <= image.oj; x += elemPerPx)
 		{
-			values[y * elemPerPx + x + image.oi] = image(y, x);
+			values[(y+image.oi) * image.oj/elemPerPx + (x + image.oj)/elemPerPx] = image(y, x);
 		}
 	}
 
-	// Simple Bubble Sort for sorting the array
 	for (size_t i = 0; i < size - 1; ++i)
 	{
 		for (size_t j = 0; j < size - i - 1; ++j)
@@ -115,7 +110,6 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Re
 		}
 	}
 
-	// Find the median value
 	unsigned char median;
 	if (size % 2 == 0)
 	{
@@ -139,19 +133,17 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE __device__ unsigned char CU(skepu::Re
 #define VARIANT_CUDA(block)
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region2D<unsigned char> image, unsigned long elemPerPx)
 {
-	const size_t size = (2 * image.oi + 1) * elemPerPx;
-	unsigned char values[size];
+	const size_t size = (2 * image.oi + 1) + (2* image.oj/elemPerPx + 1);
+	unsigned char values [size];
 
-	// Copy pixel values from the region to the array
 	for (int y = -image.oi; y <= image.oi; ++y)
 	{
 		for (int x = -image.oj; x <= image.oj; x += elemPerPx)
 		{
-			values[y * elemPerPx + x + image.oi] = image(y, x);
+			values[(y+image.oi) * image.oj/elemPerPx + (x + image.oj)/elemPerPx] = image(y, x);
 		}
 	}
 
-	// Simple Bubble Sort for sorting the array
 	for (size_t i = 0; i < size - 1; ++i)
 	{
 		for (size_t j = 0; j < size - i - 1; ++j)
@@ -165,7 +157,6 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region2D<uns
 		}
 	}
 
-	// Find the median value
 	unsigned char median;
 	if (size % 2 == 0)
 	{
@@ -189,19 +180,17 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char OMP(skepu::Region2D<uns
 #define VARIANT_CUDA(block) block
 static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char CPU(skepu::Region2D<unsigned char> image, unsigned long elemPerPx)
 {
-	const size_t size = (2 * image.oi + 1) * elemPerPx;
-	unsigned char values[size];
+	const size_t size = (2 * image.oi + 1) + (2* image.oj/elemPerPx + 1);
+	unsigned char values [size];
 
-	// Copy pixel values from the region to the array
 	for (int y = -image.oi; y <= image.oi; ++y)
 	{
 		for (int x = -image.oj; x <= image.oj; x += elemPerPx)
 		{
-			values[y * elemPerPx + x + image.oi] = image(y, x);
+			values[(y+image.oi) * image.oj/elemPerPx + (x + image.oj)/elemPerPx] = image(y, x);
 		}
 	}
 
-	// Simple Bubble Sort for sorting the array
 	for (size_t i = 0; i < size - 1; ++i)
 	{
 		for (size_t j = 0; j < size - i - 1; ++j)
@@ -215,7 +204,6 @@ static inline SKEPU_ATTRIBUTE_FORCE_INLINE unsigned char CPU(skepu::Region2D<uns
 		}
 	}
 
-	// Find the median value
 	unsigned char median;
 	if (size % 2 == 0)
 	{
