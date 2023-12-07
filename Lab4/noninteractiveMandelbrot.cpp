@@ -119,3 +119,4 @@ int main( int argc, char** argv)
 // Dump to PPM
 	writeppm("fractalout.ppm", DIM, DIM, pixels);
 }
+      
