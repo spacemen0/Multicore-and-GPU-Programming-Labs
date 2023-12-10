@@ -95,17 +95,10 @@ __global__ void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx,
     }
 }
 
-void print_help(){
-
-};
-void PrintHelp(){
-
-};
 void initBitmap(int width, int height)
 {
     if (h_pixels)
         free(h_pixels);
-    h_pixels = (unsigned char *)malloc(width * height * 4);
     gImageWidth = width;
     gImageHeight = height;
 }
@@ -191,7 +184,6 @@ void Draw()
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawPixels(gImageWidth, gImageHeight, GL_RGBA, GL_UNSIGNED_BYTE, h_pixels);
 
-    PrintHelp();
 
     glutSwapBuffers();
 }
