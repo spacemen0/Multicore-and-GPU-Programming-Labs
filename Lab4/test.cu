@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 
 #define DIM 512
 
@@ -22,89 +24,87 @@ int maxiter = 20;
 MYFLOAT offsetx = -200, offsety = 0, zoom = 0;
 MYFLOAT scale = 1.5;
 
-struct cuComplex
-{
+struct cuComplex {
     MYFLOAT r;
     MYFLOAT i;
 
-    cuComplex(MYFLOAT a, MYFLOAT b) : r(a), i(b) {}
+    __device__ cuComplex operator*(const cuComplex &a) const {
+        return {r * a.r - i * a.i, r * a.i + i * a.r};
+    }
 
-    float magnitude2(void)
-    {
+    __device__ cuComplex operator+(const cuComplex &a) const {
+        return {r + a.r, i + a.i};
+    }
+
+    __device__ MYFLOAT magnitude2() const {
         return r * r + i * i;
-    }
-
-    cuComplex operator*(const cuComplex &a)
-    {
-        return cuComplex(r * a.r - i * a.i, i * a.r + r * a.i);
-    }
-
-    cuComplex operator+(const cuComplex &a)
-    {
-        return cuComplex(r + a.r, i + a.i);
     }
 };
 
-__device__ int mandelbrot(MYFLOAT jx, MYFLOAT jy, int maxiter)
-{
-    cuComplex c(jx, jy);
-    cuComplex a(jx, jy);
-
-    int i = 0;
-    for (i = 0; i < maxiter; i++)
-    {
-        a = a * a + c;
-        if (a.magnitude2() > 1000)
-            return i;
-    }
-
-    return i;
+__device__ cuComplex make_cuComplex(MYFLOAT r, MYFLOAT i) {
+    cuComplex c;
+    c.r = r;
+    c.i = i;
+    return c;
 }
 
-__global__ void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale, int width, int height)
-{
-    int x = threadIdx.x + blockIdx.x * blockDim.x;
-    int y = threadIdx.y + blockIdx.y * blockDim.y;
+__global__ void mandelbrotKernel(unsigned char *ptr, int gImageWidth, int gImageHeight,
+                                 MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale, int maxiter) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x < width && y < height)
-    {
-        int offset = x + y * width;
+    if (x < gImageWidth && y < gImageHeight) {
+        int offset = x + y * gImageWidth;
 
-        MYFLOAT jx = scale * (MYFLOAT)(width / 2 - x + offsetx / scale) / (width / 2);
-        MYFLOAT jy = scale * (MYFLOAT)(height / 2 - y + offsety / scale) / (width / 2);
+        MYFLOAT jx = scale * (MYFLOAT)(gImageWidth / 2 - x + offsetx / scale) / (gImageWidth / 2);
+        MYFLOAT jy = scale * (MYFLOAT)(gImageHeight / 2 - y + offsety / scale) / (gImageWidth / 2);
 
-        // now calculate the value at that position
-        int fractalValue = mandelbrot(jx, jy, maxiter);
+        cuComplex c = make_cuComplex(jx, jy);
+        cuComplex a = make_cuComplex(jx, jy);
+
+        int i = 0;
+        for (i = 0; i < maxiter; i++) {
+            a = a * a + c;
+            if (a.magnitude2() > 1000)
+                break;
+        }
 
         // Colorize it
-        int red = 255 * fractalValue / maxiter;
+        int red = 255 * i / maxiter;
         if (red > 255)
             red = 255 - red;
-        int green = 255 * fractalValue * 4 / maxiter;
+        int green = 255 * i * 4 / maxiter;
         if (green > 255)
             green = 255 - green;
-        int blue = 255 * fractalValue * 20 / maxiter;
+        int blue = 255 * i * 20 / maxiter;
         if (blue > 255)
             blue = 255 - blue;
 
         ptr[offset * 4 + 0] = red;
         ptr[offset * 4 + 1] = green;
         ptr[offset * 4 + 2] = blue;
-
         ptr[offset * 4 + 3] = 255;
     }
 }
 
-void initBitmap(int width, int height)
-{
+void launchKernel() {
+    const int numThreadsPerBlock = 16;
+    dim3 threadsPerBlock(numThreadsPerBlock, numThreadsPerBlock);
+    dim3 numBlocks((gImageWidth + numThreadsPerBlock - 1) / numThreadsPerBlock,
+                   (gImageHeight + numThreadsPerBlock - 1) / numThreadsPerBlock);
+
+    mandelbrotKernel<<<numBlocks, threadsPerBlock>>>(d_pixels, gImageWidth, gImageHeight, offsetx, offsety, scale, maxiter);
+    cudaDeviceSynchronize();  // Ensure the kernel is completed before copying back the data
+}
+
+void initBitmap(int width, int height) {
     if (h_pixels)
         free(h_pixels);
     gImageWidth = width;
     gImageHeight = height;
 }
 
-void Reshape(int width, int height)
-{
+void Reshape(int width, int height) {
     glViewport(0, 0, width, height);
     glLoadIdentity();
     glOrtho(-0.5f, width - 0.5f, -0.5f, height - 0.5f, -1.f, 1.f);
@@ -115,10 +115,8 @@ void Reshape(int width, int height)
 
 int mouse_x, mouse_y, mouse_btn;
 
-void mouse_button(int button, int state, int x, int y)
-{
-    if (state == GLUT_DOWN)
-    {
+void mouse_button(int button, int state, int x, int y) {
+    if (state == GLUT_DOWN) {
         // Record start position
         mouse_x = x;
         mouse_y = y;
@@ -126,10 +124,8 @@ void mouse_button(int button, int state, int x, int y)
     }
 }
 
-void mouse_motion(int x, int y)
-{
-    if (mouse_btn == 0)
-    {
+void mouse_motion(int x, int y) {
+    if (mouse_btn == 0) {
         // Ordinary mouse button - move
         offsetx += (x - mouse_x) * scale;
         mouse_x = x;
@@ -137,9 +133,7 @@ void mouse_motion(int x, int y)
         mouse_y = y;
 
         glutPostRedisplay();
-    }
-    else
-    {
+    } else {
         // Alt mouse button - scale
         scale *= pow(1.1, y - mouse_y);
         mouse_y = y;
@@ -147,10 +141,8 @@ void mouse_motion(int x, int y)
     }
 }
 
-void KeyboardProc(unsigned char key, int x, int y)
-{
-    switch (key)
-    {
+void KeyboardProc(unsigned char key, int x, int y) {
+    switch (key) {
     case 27: /* Escape key */
     case 'q':
     case 'Q':
@@ -169,27 +161,22 @@ void KeyboardProc(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
-
-
-void Draw()
-{
+void Draw() {
     dim3 blockDim(16, 16);
     dim3 gridDim((gImageWidth + blockDim.x - 1) / blockDim.x, (gImageHeight + blockDim.y - 1) / blockDim.y);
 
-    computeFractal<<<gridDim, blockDim>>>(d_pixels, maxiter, offsetx, offsety, scale, gImageWidth, gImageHeight);
+    launchKernel();
     cudaMemcpy(h_pixels, d_pixels, gImageWidth * gImageHeight * 4 * sizeof(unsigned char), cudaMemcpyDeviceToHost);
 
-    // Dump the whole picture onto the screen. (Old-style OpenGL but without lots of geometry that doesn't matter so much.)
+    // Dump the whole picture onto the screen.
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawPixels(gImageWidth, gImageHeight, GL_RGBA, GL_UNSIGNED_BYTE, h_pixels);
 
-
     glutSwapBuffers();
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowSize(DIM, DIM);

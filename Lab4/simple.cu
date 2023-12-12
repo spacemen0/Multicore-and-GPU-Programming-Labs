@@ -25,13 +25,7 @@ int main()
 	const int size = N * sizeof(float);
 	dim3 dimBlock(blocksize, 1);
 	dim3 dimGrid(1, 1);
-	// 	float *c = new float[N];
-	// float *cd;
-	// cudaMalloc((void **)&cd, size);
-	// 	simple<<<dimGrid, dimBlock>>>(cd);
-	//	cudaDeviceSynchronize();
-	// 	cudaMemcpy(c, cd, size, cudaMemcpyDeviceToHost);
-	// cudaFree(cd);
+
 
 	float *s = new float[N];
 	float *sd;
@@ -43,11 +37,6 @@ int main()
 
 	cudaFree(sd);
 
-	// for (int i = 0; i < N; i++)
-	// 	printf("%f ", c[i]);
-	// printf("\n");
-	// delete[] c;
-	// printf("done\n");
 
 	for (int i = 0; i < N; i++)
 		printf("%f ", s[i]);
