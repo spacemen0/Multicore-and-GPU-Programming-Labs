@@ -281,10 +281,10 @@ int main(int argc, const char *argv[])
 	float resComb, resSep;
 
 	auto timeComb = skepu::benchmark::measureExecTimeIdempotent([&]
-													  { resComb = comb(v1, v2); });
+																{ resComb = comb(v1, v2); });
 
 	auto timeSep = skepu::benchmark::measureExecTimeIdempotent([&]
-													 {
+															   {
 														 sepMap(resMap,v1,v2);
 														 resSep = sepReduce(resMap); });
 

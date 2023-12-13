@@ -11,15 +11,13 @@
 #include <sstream>
 #include <time.h>
 #include <iterator>
-
 #include <skepu>
-
 #include "support.h"
 
 unsigned char median_kernel(skepu::Region2D<unsigned char> image, size_t elemPerPx)
 {
-	const size_t size = (2 * image.oi + 1) + (2* image.oj/elemPerPx + 1);
-	unsigned char values [size];
+	size_t size = (image.oi + 1) * ((2* image.oj)/elemPerPx)+1;
+	unsigned char values [2048];
 
 	for (int y = -image.oi; y <= image.oi; ++y)
 	{
@@ -31,15 +29,17 @@ unsigned char median_kernel(skepu::Region2D<unsigned char> image, size_t elemPer
 
 	for (size_t i = 0; i < size - 1; ++i)
 	{
-		for (size_t j = 0; j < size - i - 1; ++j)
+		size_t minIndex = i;
+		for (size_t j = i + 1; j < size; ++j)
 		{
-			if (values[j] > values[j + 1])
+			if (values[j] < values[minIndex])
 			{
-				auto temp = values[j];
-				values[j] = values[j + 1];
-				values[j + 1] = temp;
+				minIndex = j;
 			}
 		}
+		auto temp = values[i];
+		values[i]=values[minIndex];
+		values[minIndex] = temp;
 	}
 
 	unsigned char median;
