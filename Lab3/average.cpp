@@ -29,21 +29,28 @@ unsigned char average_kernel(skepu::Region2D<unsigned char> m, size_t elemPerPx)
 
 unsigned char average_kernel_1d(skepu::Region1D<unsigned char> m, size_t elemPerPx)
 {
+	
 	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
 	float res = 0;
 	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
 		res += m(x);
+
+	// for (int x = -m.oj; x <= m.oj; x += elemPerPx)
+	// 	res_row += m(y, x);  
 	return res * scaling;
 }
 
 unsigned char gaussian_kernel(skepu::Region1D<unsigned char> m, const skepu::Vec<float> stencil, size_t elemPerPx)
 {
-	float res = 0;
-	for (int x = -m.oi; x <= m.oi; x += elemPerPx)
-	{
-		res += m(x) * stencil[(m.oi+ x)/ elemPerPx];
-	}
-	return res;
+	float scaling = 1.0 / (m.oi / elemPerPx * 2 + 1);
+    float res = 0;
+
+    for (int x = -m.oi; x <= m.oi; x += elemPerPx)
+    {
+        res += m(x) * sampleGaussian(m.oi)[x / elemPerPx];
+    }
+
+    return static_cast<unsigned char>(res * scaling);
 }
 
 int main(int argc, char *argv[])
