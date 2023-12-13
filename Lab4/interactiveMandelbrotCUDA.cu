@@ -31,7 +31,7 @@ void initBitmap(int width, int height)
 #define DIM 512
 
 // Select precision here! float or double!
-#define MYFLOAT float
+#define MYFLOAT double
 
 // User controlled parameters
 int maxiter = 20;

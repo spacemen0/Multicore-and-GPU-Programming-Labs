@@ -4,8 +4,8 @@
 using namespace std;
 
 __global__ void matrixAddition(float* A, float* B, float* C, int N) {
-    int ix = blockIdx.x * blockDim.x + threadIdx.x;
-    int iy = blockIdx.y * blockDim.y + threadIdx.y;
+    int iy = blockIdx.x * blockDim.x + threadIdx.x;
+    int ix = blockIdx.y * blockDim.y + threadIdx.y;
     int index = ix+iy*N;
     if (ix < N && iy < N)
     {
@@ -31,7 +31,7 @@ void printMatrix(float* matrix, int N) {
 }
 
 int main() {
-    const int N = 512;  
+    const int N = 1024;  
 
     
     float* h_A = new float[N*N];
