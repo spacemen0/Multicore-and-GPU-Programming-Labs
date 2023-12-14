@@ -31,14 +31,14 @@ void initBitmap(int width, int height)
 #define DIM 512
 
 // Select precision here! float or double!
-#define MYFLOAT double
+#define MYFLOAT float
 
-// User controlled parameters
+
 int maxiter = 20;
 MYFLOAT offsetx = -200, offsety = 0, zoom = 0;
 MYFLOAT scale = 1.5;
 
-// Complex number class
+
 struct cuComplex
 {
     MYFLOAT r;
@@ -73,17 +73,16 @@ struct cuComplex
         }                                                                    \
     } while (0)
 
-const int num_threads = 256; // You can adjust this based on your GPU capabilities
 
-// CUDA kernel to compute Mandelbrot set
-__global__ void mandelbrotKernel(int start_x, int end_x, int gImageWidth, int gImageHeight, unsigned char *ptr, int maxiter, MYFLOAT scale, MYFLOAT offsetx, MYFLOAT offsety)
+
+__global__ void mandelbrotKernel(int gImageWidth, int gImageHeight, unsigned char *ptr, int maxiter, MYFLOAT scale, MYFLOAT offsetx, MYFLOAT offsety)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x >= start_x && x < end_x)
+    if ( x < gImageWidth && y < gImageHeight)
     {
-        for (int y = 0; y < gImageHeight; y++)
-        {
+
             int offset = x + y * gImageWidth;
 
             MYFLOAT jx = scale * (MYFLOAT)(gImageWidth / 2 - x + offsetx / scale) / (gImageWidth / 2);
@@ -115,7 +114,7 @@ __global__ void mandelbrotKernel(int start_x, int end_x, int gImageWidth, int gI
             ptr[offset * 4 + 1] = green;
             ptr[offset * 4 + 2] = blue;
             ptr[offset * 4 + 3] = 255;
-        }
+        
     }
 }
 
@@ -128,8 +127,10 @@ void computeFractal(unsigned char *ptr)
     cudaMalloc((void **)&d_ptr, size);
     CHECK_CUDA_ERROR(cudaMemcpy(d_ptr, ptr, size, cudaMemcpyHostToDevice));
 
-    int blocks = (gImageWidth + num_threads - 1) / num_threads;
-    mandelbrotKernel<<<blocks, num_threads>>>(0, gImageWidth, gImageWidth, gImageHeight, d_ptr, maxiter, scale, offsetx, offsety);
+    dim3 blockSize (32,32);
+    dim3 gridSize ((gImageWidth + blockSize.x-1)/blockSize.x,(gImageHeight + blockSize.y-1)/blockSize.y);
+
+    mandelbrotKernel<<<gridSize, blockSize>>>( gImageWidth, gImageHeight, d_ptr, maxiter, scale, offsetx, offsety);
 
     CHECK_CUDA_ERROR(cudaMemcpy(ptr, d_ptr, size, cudaMemcpyDeviceToHost));
     CHECK_CUDA_ERROR(cudaFree(d_ptr));
@@ -222,7 +223,7 @@ int mouse_x, mouse_y, mouse_btn;
 // Mouse down
 static void mouse_button(int button, int state, int x, int y)
 {
-    if (state == GLUT_DOWN)
+    if (state == GLUT_DOWN)mandelbr
     {
         // Record start position
         mouse_x = x;

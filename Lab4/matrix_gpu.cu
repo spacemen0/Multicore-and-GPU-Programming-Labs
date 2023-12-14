@@ -4,9 +4,9 @@
 using namespace std;
 
 __global__ void matrixAddition(float* A, float* B, float* C, int N) {
-    int iy = blockIdx.x * blockDim.x + threadIdx.x;
-    int ix = blockIdx.y * blockDim.y + threadIdx.y;
-    int index = ix+iy*N;
+    int ix = blockIdx.x * blockDim.x + threadIdx.x;
+    int iy = blockIdx.y * blockDim.y + threadIdx.y;
+    int index = ix+iy*gridDim.x*blockDim.x;
     if (ix < N && iy < N)
     {
         C[index] = A[index] + B[index];
