@@ -85,8 +85,8 @@ enum {
 
 static unsigned char median_kernel(skepu_region2d_unsigned__space__char image, unsigned long elemPerPx)
 {
-	const size_t size = (2 * image.oi + 1) + (2* image.oj/elemPerPx + 1);
-	unsigned char values [size];
+	size_t size = (image.oi + 1) * ((2* image.oj)/elemPerPx)+1;
+	unsigned char values [2048];
 
 	for (int y = -image.oi; y <= image.oi; ++y)
 	{
@@ -96,17 +96,31 @@ static unsigned char median_kernel(skepu_region2d_unsigned__space__char image, u
 		}
 	}
 
+	// for (size_t i = 0; i < size - 1; ++i)
+	// {
+	// 	for (size_t j = 0; j < size - i - 1; ++j)
+	// 	{
+	// 		if (values[j] > values[j + 1])
+	// 		{
+	// 			auto temp = values[j];
+	// 			values[j] = values[j + 1];
+	// 			values[j + 1] = temp;
+	// 		}
+	// 	}
+	// }
 	for (size_t i = 0; i < size - 1; ++i)
 	{
-		for (size_t j = 0; j < size - i - 1; ++j)
+		size_t minIndex = i;
+		for (size_t j = i + 1; j < size; ++j)
 		{
-			if (values[j] > values[j + 1])
+			if (values[j] < values[minIndex])
 			{
-				auto temp = values[j];
-				values[j] = values[j + 1];
-				values[j + 1] = temp;
+				minIndex = j;
 			}
 		}
+		auto temp = values[i];
+		values[i]=values[minIndex];
+		values[minIndex] = temp;
 	}
 
 	unsigned char median;

@@ -16,7 +16,7 @@ void add_matrix(float *a, float *b, float *c, int N)
 
 int main()
 {
-    const int N = 512;
+    const int N = 40;
 
     // Allocate memory for matrices
     float *a = (float *)malloc(N * N * sizeof(float));
@@ -38,11 +38,11 @@ int main()
             b[i + j * N] = i+j;
         }
 
-    double start = GetMilliseconds();
+    double start = GetMicroseconds();
     add_matrix(a, b, c, N);
-    double end = GetMilliseconds();
+    double end = GetMicroseconds();
 
-    printf("Execution Time: %lf ms\n", (end - start));
+    printf("Execution Time: %lf ms\n", (end - start)/1000.0);
 
     // Uncomment the following code if you want to print the result matrix
     
