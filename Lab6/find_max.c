@@ -27,7 +27,7 @@
 #include "milli.h"
 
 // Size of data!
-#define kDataLength 4096 * 4096 * 16
+#define kDataLength 16
 #define MAXPRINTSIZE 16
 
 unsigned int *generateRandomData(unsigned int length)
@@ -58,7 +58,7 @@ unsigned int *generateRandomData(unsigned int length)
 // Kernel run conveniently packed. Edit as needed, i.e. with more parameters.
 // Only ONE array of data.
 // __kernel void sort(__global unsigned int *data, const unsigned int length)
-void runKernel(cl_kernel kernel, int threads, cl_mem data, unsigned int length)
+void runKernel(cl_kernel kernel, int threads, cl_mem data)
 {
   size_t localWorkSize, globalWorkSize;
   cl_int ciErrNum = CL_SUCCESS;
@@ -72,7 +72,7 @@ void runKernel(cl_kernel kernel, int threads, cl_mem data, unsigned int length)
 
   // set the args values
   ciErrNum = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&data);
-  ciErrNum |= clSetKernelArg(kernel, 1, sizeof(cl_uint), (void *)&length);
+  // ciErrNum |= clSetKernelArg(kernel, 1, sizeof(cl_uint), (void *)&length);
   printCLError(ciErrNum, 8);
 
   // Run kernel
@@ -98,11 +98,11 @@ int find_max_gpu(unsigned int *data, unsigned int length)
   printCLError(ciErrNum, 7);
 
   // ********** RUN THE KERNEL ************
-  int length_left = length / 2;
-  while (length_left > 0)
+  int current_size = length / 2;
+  while (current_size > 0)
   {
-    runKernel(gpuReduction, length_left, io_data, length_left);
-    length_left /= 2;
+    runKernel(gpuReduction, current_size, io_data);
+    current_size /= 2;
   }
 
   // Get data
