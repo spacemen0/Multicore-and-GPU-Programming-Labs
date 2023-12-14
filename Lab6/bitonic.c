@@ -86,7 +86,7 @@ void runKernel(cl_kernel kernel, int threads, cl_mem data, unsigned int length, 
   printCLError(ciErrNum, 10);
 }
 
-static cl_kernel gpgpuSort;
+static cl_kernel gpuSort;
 
 int bitonic_gpu(unsigned int *data, unsigned int length)
 {
@@ -102,7 +102,7 @@ int bitonic_gpu(unsigned int *data, unsigned int length)
   ResetMilli();
   for (int k = 2; k <= length; k = 2 * k)   // Outer loop, double size for each step
     for (int j = k >> 1; j > 0; j = j >> 1) // Inner loop, half size for each step
-      runKernel(gpgpuSort, length, io_data, length, k, j);
+      runKernel(gpuSort, length, io_data, length, k, j);
   printf("GPU %f ms\n", GetSeconds() * 1000);
 
   // Get data
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     return 1;
   }
   // Load and compile the kernel
-  gpgpuSort = compileKernel("bitonic.cl", "bitonic");
+  gpuSort = compileKernel("bitonic.cl", "bitonic");
 
   data_cpu = generateRandomData(length);
   data_gpu = (unsigned int *)malloc(length * sizeof(unsigned int));
@@ -204,8 +204,8 @@ int main(int argc, char **argv)
     }
   printf("\nYour sorting looks correct!\n");
   closeOpenCL();
-  if (gpgpuSort)
-    clReleaseKernel(gpgpuSort);
+  if (gpuSort)
+    clReleaseKernel(gpuSort);
   return 0;
 }
 

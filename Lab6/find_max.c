@@ -85,7 +85,7 @@ void runKernel(cl_kernel kernel, int threads, cl_mem data, unsigned int length)
   printCLError(ciErrNum, 10);
 }
 
-static cl_kernel gpgpuReduction;
+static cl_kernel gpuReduction;
 
 int find_max_gpu(unsigned int *data, unsigned int length)
 {
@@ -101,7 +101,7 @@ int find_max_gpu(unsigned int *data, unsigned int length)
   int length_left = length / 2;
   while (length_left > 0)
   {
-    runKernel(gpgpuReduction, length_left, io_data, length_left);
+    runKernel(gpuReduction, length_left, io_data, length_left);
     length_left /= 2;
   }
 
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     return 1;
   }
   // Load and compile the kernel
-  gpgpuReduction = compileKernel("find_max.cl", "find_max");
+  gpuReduction = compileKernel("find_max.cl", "find_max");
 
   data_cpu = generateRandomData(length);
   data_gpu = (unsigned int *)malloc(length * sizeof(unsigned int));
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
   }
   printf("\nYour max looks correct!\n");
   closeOpenCL();
-  if (gpgpuReduction)
-    clReleaseKernel(gpgpuReduction);
+  if (gpuReduction)
+    clReleaseKernel(gpuReduction);
   return 0;
 }
