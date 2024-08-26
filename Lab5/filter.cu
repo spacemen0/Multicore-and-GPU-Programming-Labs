@@ -34,6 +34,8 @@
 // Use these for setting shared memory size.
 #define maxKernelSizeX 10
 #define maxKernelSizeY 10
+#define blockDimX 16
+#define blockDimY 16
 
 __global__ void filter_naive(unsigned char *image, unsigned char *out, const unsigned int imagesizex, const unsigned int imagesizey, const int kernelsizex, const int kernelsizey)
 {
@@ -71,19 +73,13 @@ __global__ void filter_naive(unsigned char *image, unsigned char *out, const uns
 
 __global__ void filter(unsigned char *image, unsigned char *out, const unsigned int imagesizex, const unsigned int imagesizey, const int kernelsizex, const int kernelsizey)
 {
-	// Calculate the dimensions of the shared memory array
-	// Including padding for the kernel radius
-	__shared__ unsigned char sharedMem[(16 + 2 * maxKernelSizeY) * (16 + 2 * maxKernelSizeX) * 3];
+	__shared__ unsigned char sharedMem[(blockDimY + 2 * maxKernelSizeY) * (blockDimX + 2 * maxKernelSizeX) * 3];
 
-	// Calculate the global coordinates of the thread
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-	// Calculate the local coordinates within the block
 	int localX = threadIdx.x + kernelsizex;
 	int localY = threadIdx.y + kernelsizey;
-
-	// Load data into shared memory, handling the borders
 	for (int dy = -kernelsizey; dy <= kernelsizey; dy++)
 	{
 		for (int dx = -kernelsizex; dx <= kernelsizex; dx++)
@@ -91,23 +87,18 @@ __global__ void filter(unsigned char *image, unsigned char *out, const unsigned 
 			int globalX = min(max(x + dx, 0), imagesizex - 1);
 			int globalY = min(max(y + dy, 0), imagesizey - 1);
 
-			// Calculate the index in the global memory
 			int globalIndex = (globalY * imagesizex + globalX) * 3;
 
-			// Calculate the index in the shared memory
 			int localIndex = ((localY + dy) * (blockDim.x + 2 * kernelsizex) + (localX + dx)) * 3;
 
-			// Load data from global memory to shared memory
 			sharedMem[localIndex + 0] = image[globalIndex + 0];
 			sharedMem[localIndex + 1] = image[globalIndex + 1];
 			sharedMem[localIndex + 2] = image[globalIndex + 2];
 		}
 	}
 
-	// Synchronize threads to ensure shared memory is fully loaded
 	__syncthreads();
 
-	// Perform the convolution using shared memory
 	if (x < imagesizex && y < imagesizey)
 	{
 		unsigned int sumx = 0, sumy = 0, sumz = 0;
@@ -125,7 +116,6 @@ __global__ void filter(unsigned char *image, unsigned char *out, const unsigned 
 			}
 		}
 
-		// Calculate the output pixel value and write it to global memory
 		int outputIndex = (y * imagesizex + x) * 3;
 		out[outputIndex + 0] = sumx / divby;
 		out[outputIndex + 1] = sumy / divby;
@@ -135,15 +125,13 @@ __global__ void filter(unsigned char *image, unsigned char *out, const unsigned 
 
 __global__ void filter_horizontal(unsigned char *input, unsigned char *output, const unsigned int imagesizex, const unsigned int imagesizey, const int kernelsize)
 {
-	__shared__ unsigned char sharedMem[16 * (16 + 2 * maxKernelSizeX) * 3];
+	__shared__ unsigned char sharedMem[blockDimY * (blockDimX + 2 * maxKernelSizeX) * 3];
 
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
 
 	int localX = threadIdx.x + kernelsize;
 	int localY = threadIdx.y;
-
-	// Load data into shared memory
 	for (int dx = -kernelsize; dx <= kernelsize; dx++)
 	{
 		int globalX = min(max(x + dx, 0), imagesizex - 1);
@@ -182,7 +170,7 @@ __global__ void filter_horizontal(unsigned char *input, unsigned char *output, c
 
 __global__ void filter_vertical(unsigned char *input, unsigned char *output, const unsigned int imagesizex, const unsigned int imagesizey, const int kernelsize)
 {
-	__shared__ unsigned char sharedMem[(16 + 2 * maxKernelSizeY) * (16) * 3];
+	__shared__ unsigned char sharedMem[(blockDimY + 2 * maxKernelSizeY) * (blockDimX) * 3];
 
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -190,7 +178,6 @@ __global__ void filter_vertical(unsigned char *input, unsigned char *output, con
 	int localX = threadIdx.x;
 	int localY = threadIdx.y + kernelsize;
 
-	// Load data into shared memory
 	for (int dy = -kernelsize; dy <= kernelsize; dy++)
 	{
 		int globalX = x;
@@ -229,7 +216,7 @@ __global__ void filter_vertical(unsigned char *input, unsigned char *output, con
 
 __global__ void filter_horizontal_gaussian(unsigned char *input, unsigned char *output, const unsigned int imagesizex, const unsigned int imagesizey, const int kernelsize, const float *weights)
 {
-	__shared__ unsigned char sharedMem[16 * (16 + 2 * maxKernelSizeX) * 3];
+	__shared__ unsigned char sharedMem[blockDimY * (blockDimX + 2 * maxKernelSizeX) * 3];
 
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -237,7 +224,6 @@ __global__ void filter_horizontal_gaussian(unsigned char *input, unsigned char *
 	int localX = threadIdx.x + kernelsize;
 	int localY = threadIdx.y;
 
-	// Load data into shared memory
 	for (int dx = -kernelsize; dx <= kernelsize; dx++)
 	{
 		int globalX = min(max(x + dx, 0), imagesizex - 1);
@@ -276,7 +262,7 @@ __global__ void filter_horizontal_gaussian(unsigned char *input, unsigned char *
 
 __global__ void filter_vertical_gaussian(unsigned char *input, unsigned char *output, const unsigned int imagesizex, const unsigned int imagesizey, const int kernelsize, const float *weights)
 {
-	__shared__ unsigned char sharedMem[(16 + 2 * maxKernelSizeY) * (16) * 3];
+	__shared__ unsigned char sharedMem[(blockDimY + 2 * maxKernelSizeY) * (blockDimX) * 3];
 
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -284,7 +270,6 @@ __global__ void filter_vertical_gaussian(unsigned char *input, unsigned char *ou
 	int localX = threadIdx.x;
 	int localY = threadIdx.y + kernelsize;
 
-	// Load data into shared memory
 	for (int dy = -kernelsize; dy <= kernelsize; dy++)
 	{
 		int globalX = x;
@@ -325,14 +310,10 @@ __global__ void median_filter(unsigned char *input, unsigned char *output, const
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-	// Shared memory to store the neighborhood pixels
-	__shared__ unsigned char sharedMem[(16 + 2 * maxKernelSizeY) * (16 + 2 * maxKernelSizeX) * 3];
+	__shared__ unsigned char sharedMem[(blockDimY + 2 * maxKernelSizeY) * (blockDimX + 2 * maxKernelSizeX) * 3];
 
 	int localX = threadIdx.x + kernelsizex;
 	int localY = threadIdx.y + kernelsizey;
-
-	// Load data into shared memory with border clamping
 	for (int dy = -kernelsizey; dy <= kernelsizey; dy++)
 	{
 		for (int dx = -kernelsizex; dx <= kernelsizex; dx++)
@@ -351,7 +332,6 @@ __global__ void median_filter(unsigned char *input, unsigned char *output, const
 
 	__syncthreads();
 
-	// Calculate the median for each channel
 	if (x < imagesizex && y < imagesizey)
 	{
 		for (int channel = 0; channel < 3; channel++)
@@ -366,7 +346,6 @@ __global__ void median_filter(unsigned char *input, unsigned char *output, const
 					window[idx++] = sharedMem[localIndex + channel];
 				}
 			}
-			// Sort and find median
 			for (int i = 0; i < idx - 1; i++)
 			{
 				for (int j = i + 1; j < idx; j++)
@@ -404,21 +383,18 @@ void computeImagesSeparable(int kernelsizex, int kernelsizey)
 	cudaMalloc((void **)&dev_bitmap, imagesizex * imagesizey * 3);
 	cudaMalloc((void **)&temp_output, imagesizex * imagesizey * 3);
 
-	dim3 block_dim(16, 16);
+	dim3 block_dim(blockDimX, blockDimY);
 	dim3 grid((imagesizex + block_dim.x - 1) / block_dim.x, (imagesizey + block_dim.y - 1) / block_dim.y);
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 
 	cudaEventRecord(start);
-	// First pass: horizontal filter
 	filter_horizontal<<<grid, block_dim>>>(dev_input, temp_output, imagesizex, imagesizey, kernelsizex);
 	cudaDeviceSynchronize();
 	cudaError_t err = cudaGetLastError();
 	if (err != cudaSuccess)
 		printf("Error: %s\n", cudaGetErrorString(err));
-
-	// Second pass: vertical filter
 	filter_vertical<<<grid, block_dim>>>(temp_output, dev_bitmap, imagesizex, imagesizey, kernelsizey);
 	cudaDeviceSynchronize();
 	err = cudaGetLastError();
@@ -460,21 +436,19 @@ void computeImagesGaussian(int kernelsizex, int kernelsizey)
 	cudaMalloc((void **)&d_weights, 5 * sizeof(float));
 	cudaMemcpy(d_weights, h_weights, 5 * sizeof(float), cudaMemcpyHostToDevice);
 
-	dim3 block_dim(16, 16);
+	dim3 block_dim(blockDimX, blockDimY);
 	dim3 grid((imagesizex + block_dim.x - 1) / block_dim.x, (imagesizey + block_dim.y - 1) / block_dim.y);
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 
 	cudaEventRecord(start);
-	// First pass: horizontal filter
 	filter_horizontal_gaussian<<<grid, block_dim>>>(dev_input, temp_output, imagesizex, imagesizey, kernelsizex, d_weights);
 	cudaDeviceSynchronize();
 	cudaError_t err = cudaGetLastError();
 	if (err != cudaSuccess)
 		printf("Error: %s\n", cudaGetErrorString(err));
 
-	// Second pass: vertical filter
 	filter_vertical_gaussian<<<grid, block_dim>>>(temp_output, dev_bitmap, imagesizex, imagesizey, kernelsizey, d_weights);
 	cudaDeviceSynchronize();
 	err = cudaGetLastError();
@@ -507,8 +481,6 @@ void computeImagesMedian(int kernelsizex, int kernelsizey)
 	pixels = (unsigned char *)malloc(imagesizex * imagesizey * 3);
 	unsigned char *dev_input = nullptr;
 	unsigned char *dev_bitmap = nullptr;
-
-	// Allocate device memory and check for errors
 	cudaError_t err;
 	err = cudaMalloc((void **)&dev_input, imagesizex * imagesizey * 3);
 	if (err != cudaSuccess)
@@ -526,7 +498,7 @@ void computeImagesMedian(int kernelsizex, int kernelsizey)
 
 	cudaMemcpy(dev_input, image, imagesizey * imagesizex * 3, cudaMemcpyHostToDevice);
 
-	dim3 block_dim(16, 16);
+	dim3 block_dim(blockDimX, blockDimY);
 	dim3 grid((imagesizex + block_dim.x - 1) / block_dim.x, (imagesizey + block_dim.y - 1) / block_dim.y);
 
 	cudaEvent_t start, stop;
@@ -537,7 +509,7 @@ void computeImagesMedian(int kernelsizex, int kernelsizey)
 	median_filter<<<grid, block_dim>>>(dev_input, dev_bitmap, imagesizex, imagesizey, kernelsizex, kernelsizey);
 	cudaDeviceSynchronize();
 
-	err = cudaGetLastError(); // Check for errors after kernel launch
+	err = cudaGetLastError(); 
 	if (err != cudaSuccess)
 	{
 		printf("Kernel launch failed: %s\n", cudaGetErrorString(err));
@@ -572,7 +544,7 @@ void computeImages(int kernelsizex, int kernelsizey)
 	cudaMalloc((void **)&dev_input, imagesizex * imagesizey * 3);
 	cudaMemcpy(dev_input, image, imagesizey * imagesizex * 3, cudaMemcpyHostToDevice);
 	cudaMalloc((void **)&dev_bitmap, imagesizex * imagesizey * 3);
-	dim3 blockDim(16, 16);
+	dim3 block_dim(blockDimX, blockDimY);
 	dim3 grid((imagesizex + blockDim.x - 1) / blockDim.x, (imagesizey + blockDim.y - 1) / blockDim.y);
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
@@ -582,7 +554,6 @@ void computeImages(int kernelsizex, int kernelsizey)
 	filter<<<grid, blockDim>>>(dev_input, dev_bitmap, imagesizex, imagesizey, kernelsizex, kernelsizey);
 
 	cudaDeviceSynchronize();
-	//	Check for errors!
 	cudaError_t err = cudaGetLastError();
 	if (err != cudaSuccess)
 		printf("Error: %s\n", cudaGetErrorString(err));
@@ -701,11 +672,11 @@ int main(int argc, char **argv)
                 break;
             default:
                 printf("Invalid choice! Please provide a number between 1 and 5.\n");
-                return 1; // Exit the program with an error code
+                return 1;
         }
     } else {
         printf("Please provide a command-line argument (1-5) to choose an image processing method.\n");
-        return 1; // Exit the program with an error code
+        return 1; 
     }
 
     // Main loop
