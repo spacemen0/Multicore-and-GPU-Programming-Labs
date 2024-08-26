@@ -545,13 +545,13 @@ void computeImages(int kernelsizex, int kernelsizey)
 	cudaMemcpy(dev_input, image, imagesizey * imagesizex * 3, cudaMemcpyHostToDevice);
 	cudaMalloc((void **)&dev_bitmap, imagesizex * imagesizey * 3);
 	dim3 block_dim(blockDimX, blockDimY);
-	dim3 grid((imagesizex + blockDim.x - 1) / blockDim.x, (imagesizey + blockDim.y - 1) / blockDim.y);
+	dim3 grid((imagesizex + block_dim.x - 1) / block_dim.x, (imagesizey + block_dim.y - 1) / block_dim.y);
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 
 	cudaEventRecord(start);
-	filter<<<grid, blockDim>>>(dev_input, dev_bitmap, imagesizex, imagesizey, kernelsizex, kernelsizey);
+	filter<<<grid, block_dim>>>(dev_input, dev_bitmap, imagesizex, imagesizey, kernelsizex, kernelsizey);
 
 	cudaDeviceSynchronize();
 	cudaError_t err = cudaGetLastError();
